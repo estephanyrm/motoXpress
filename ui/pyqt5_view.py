@@ -1134,6 +1134,7 @@ class MainWindow(QMainWindow):
 # ── Punto de entrada ─────────────────────────────────────────────────────────
 
 def launch_ui(controller):
+
     app = QApplication(sys.argv)
     app.setApplicationName("MotoXpress")
 

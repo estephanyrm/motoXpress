@@ -1,5 +1,5 @@
 from typing import Optional, List
-# gg
+
 from peewee import Model, AutoField, CharField, TextField, DoesNotExist
 
 from db.gestor_conexiones import ConexionSQLite3
@@ -22,7 +22,6 @@ def _a_vo(fila: _CategoriaModel) -> CategoriaVO:
         descripcion=fila.descripcion,
     )
 
-
 # Usamos Peewee: Categoria es una tabla plana sin joins.
 class CategoriaDAO:
 
@@ -38,4 +37,4 @@ class CategoriaDAO:
             with _CategoriaModel.bind_ctx(conexion.db_peewee):
                 return _a_vo(_CategoriaModel.get_by_id(id_categoria))
         except DoesNotExist:
-            return None  # Bug fix: línea original rota, ahora retorna None correctamente
+            return None 
