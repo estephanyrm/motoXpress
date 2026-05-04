@@ -11,17 +11,6 @@ from model.VO.FinanciacionVO import FinanciacionVO
 
 
 class RegistrarVentaCommand:
-    """
-    Encapsula la acción de registrar una venta como un objeto invertible.
-
-    Responsabilidad:
-      - execute(): delega la persistencia a los DAOs y guarda el estado
-                   previo necesario para deshacer.
-      - undo():    revierte exactamente lo que execute() hizo usando los
-                   IDs guardados. No reaplica reglas de negocio.
-
-    No contiene lógica de negocio; esa responsabilidad pertenece a VentaService.
-    """
 
     def __init__(self, venta: VentaVO,
                  financiacion: Optional[FinanciacionVO] = None):
@@ -29,7 +18,6 @@ class RegistrarVentaCommand:
             venta.financiacion = financiacion
 
         self._venta = venta
-
         # Estado guardado durante execute() para poder revertir
         self._venta_id: Optional[int] = None
         self._moto_estado_anterior: Optional[str] = None

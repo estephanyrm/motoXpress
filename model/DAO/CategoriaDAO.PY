@@ -1,5 +1,5 @@
 from typing import Optional, List
-
+# gg
 from peewee import Model, AutoField, CharField, TextField, DoesNotExist
 
 from db.gestor_conexiones import ConexionSQLite3
