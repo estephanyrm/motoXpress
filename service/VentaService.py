@@ -75,6 +75,7 @@ class VentaService:
 
         with connection_factory() as conn:
             command.undo(conn)
+        self._undo_redo.push_redo(command)
 
         return True
 
@@ -85,6 +86,7 @@ class VentaService:
 
         with connection_factory() as conn:
             command.execute(conn)
+        self._undo_redo.push_undo(command)
 
         return True
 

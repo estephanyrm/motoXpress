@@ -46,3 +46,8 @@ class FinanciacionDAO:
             financiacion.id_venta
         ))
         return cursor.lastrowid
+    
+    @staticmethod
+    def eliminar(conexion: ConexionSQLite3, id_financiacion: int) -> None:
+        """Elimina una financiación por su PK. Usado por el undo del Command."""
+        conexion.execute("DELETE FROM Financiacion WHERE id_financiacion = ?", (id_financiacion,))

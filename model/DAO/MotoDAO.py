@@ -100,3 +100,39 @@ class MotoDAO:
                           nuevo_estado: str) -> None:
         sql: str = "UPDATE Moto SET estado = ? WHERE id_moto = ?"
         conexion.execute(sql, (nuevo_estado, id_moto))
+    @staticmethod
+    def actualizar(conexion: ConexionSQLite3, moto: MotoVO) -> None:
+        """Actualiza todos los campos de una moto existente."""
+        sql: str = """
+            UPDATE Moto
+            SET vin=?, marca=?, modelo=?, anio=?, precio=?, color=?, estado=?
+            WHERE id_moto = ?
+        """
+        conexion.execute(sql, (
+            moto.vin,
+            moto.marca,
+            moto.modelo,
+            moto.anio,
+            moto.precio,
+            moto.color,
+            moto.estado,
+            moto.id_moto,
+        ))
+
+    @staticmethod
+    def buscar_por_vin(conexion: ConexionSQLite3, vin: str) -> Optional[MotoVO]:
+        sql: str = "SELECT id_moto, vin, marca, modelo, anio, precio, color, estado FROM Moto WHERE vin = ?"
+        fila = conexion.execute(sql, (vin,)).fetchone()
+        if fila is None:
+            return None
+        r = dict(fila)
+        return MotoVO(
+            id_moto=r['id_moto'],
+            vin=r['vin'],
+            marca=r['marca'],
+            modelo=r['modelo'],
+            anio=r['anio'],
+            precio=r['precio'],
+            color=r['color'],
+            estado=r['estado'],
+        )

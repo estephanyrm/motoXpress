@@ -1,4 +1,3 @@
-#  insertar, obtener_por_id, listar_por_cliente, listar_por_periodo
 from typing import Optional, List
 from sqlite3 import Cursor
 
@@ -203,3 +202,8 @@ class VentaDAO:
             venta.id_empleado
         ))
         return cursor.lastrowid
+    
+    @staticmethod
+    def eliminar(conexion: ConexionSQLite3, id_venta: int) -> None:
+        """Elimina una venta por su PK. Usado por el undo del Command."""
+        conexion.execute("DELETE FROM Venta WHERE id_venta = ?", (id_venta,))
