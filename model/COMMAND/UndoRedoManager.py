@@ -1,13 +1,6 @@
 from typing import List
 
-class UndoRedoManager:    
-    """
-    Clase para el control de estados del sistema
-    - Solamente debe existir una instancia en el SI
-    - Este vivirá en la RAM (activo solamente en tiempo de ejecución)
-    TODO: Implementar persistencia (archivos)
-    """
-    
+class UndoRedoManager:        
     def __init__(self):
         self.undo_stack: List = [] 
         self.redo_stack: List = [] 

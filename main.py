@@ -1,31 +1,34 @@
-from db.gestor_conexiones import connection_factory   
+import sys
+import os
+
+# Permite ejecutar desde cualquier directorio
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from model.COMMAND.UndoRedoManager import UndoRedoManager
 
-from service.VentaService import VentaService
-from service.MotoService import MotoService
-from service.ClienteService import ClienteService
+from service.VentaService    import VentaService
+from service.MotoService     import MotoService
+from service.ClienteService  import ClienteService
 from service.EmpleadoService import EmpleadoService
 from service.CategoriaService import CategoriaService
 
 from controller.MotoXpressController import MotoXpressController
+from ui.pyqt5_view import launch_ui
 
-# Factory del sistema (construye el árbol de dependencias)
+
 def build_controller() -> MotoXpressController:
     """
-    Factory principal.
-
-    Instancia todos los componentes en el orden correcto e inyecta
-    dependencias según su capa:
-      DB ← DAO ← Service ← Controller
-    El UndoRedoManager se crea aquí y se comparte con VentaService.
+    Factory principal — construye el árbol de dependencias en orden:
+      UndoRedoManager  (compartido)
+      Services         (reciben lo que necesitan)
+      Controller       (recibe los services)
     """
     undo_redo = UndoRedoManager()
 
-    venta_service    = VentaService(undo_redo)
-    moto_service     = MotoService()
-    cliente_service  = ClienteService()
-    empleado_service = EmpleadoService()
+    venta_service     = VentaService(undo_redo)
+    moto_service      = MotoService()
+    cliente_service   = ClienteService()
+    empleado_service  = EmpleadoService()
     categoria_service = CategoriaService()
 
     return MotoXpressController(
@@ -37,16 +40,9 @@ def build_controller() -> MotoXpressController:
     )
 
 
-# Punto de entrada
 def main():
     controller = build_controller()
-    # iniciar UI (PyQt5)
-    # app = QApplication(sys.argv)
-    # ventana = MainWindow(controller)
-    # ventana.show()
-    # sys.exit(app.exec_())
-    print("MotoXpress iniciado correctamente.")
-    print("Controller listo:", controller)
+    launch_ui(controller) 
 
 
 if __name__ == "__main__":

@@ -7,46 +7,63 @@ from model.DAO.MotoDAO import MotoDAO
 from model.DAO.FinanciacionDAO import FinanciacionDAO
 
 from model.VO.VentaVO import VentaVO
+from model.VO.FinanciacionVO import FinanciacionVO
 
 
 class RegistrarVentaCommand:
+    """
+    Encapsula la acción de registrar una venta como un objeto invertible.
 
-    def __init__(self, venta: VentaVO):
+    Responsabilidad:
+      - execute(): delega la persistencia a los DAOs y guarda el estado
+                   previo necesario para deshacer.
+      - undo():    revierte exactamente lo que execute() hizo usando los
+                   IDs guardados. No reaplica reglas de negocio.
+
+    No contiene lógica de negocio; esa responsabilidad pertenece a VentaService.
+    """
+
+    def __init__(self, venta: VentaVO,
+                 financiacion: Optional[FinanciacionVO] = None):
+        if financiacion is not None:
+            venta.financiacion = financiacion
+
         self._venta = venta
 
+        # Estado guardado durante execute() para poder revertir
         self._venta_id: Optional[int] = None
         self._moto_estado_anterior: Optional[str] = None
         self._financiacion_id: Optional[int] = None
 
     def execute(self, conn: ConexionSQLite3) -> None:
-        # Guarda el estado previo de la moto
+        # Guarda estado previo de la moto (necesario para undo)
         moto = MotoDAO.obtener_por_id(conn, self._venta.id_moto)
         if moto is None:
-            raise Exception("Moto no encontrada")
+            raise ValueError("Moto no encontrada")
 
         self._moto_estado_anterior = moto.estado
 
-        # inserta la venta (incluye financiación automáticamente)
+        # Delegamos la inserción completa al DAO
         self._venta_id = VentaDAO.insertar(conn, self._venta)
         self._venta.id_venta = self._venta_id
 
-        # Guarda el ID de financiación si existe
+        # Guarda el ID de financiación creada, para poder eliminarla en undo
         if self._venta.financiacion:
             fin = FinanciacionDAO.obtener_por_venta(conn, self._venta_id)
             if fin:
                 self._financiacion_id = fin.id_financiacion
 
-
     def undo(self, conn: ConexionSQLite3) -> None:
         if self._venta_id is None:
             raise RuntimeError("No se puede deshacer: el comando no ha sido ejecutado.")
 
-        # Elimina la financiación primero (por FK)
+        # Elimina financiación primero (restricción FK)
         if self._financiacion_id is not None:
             FinanciacionDAO.eliminar(conn, self._financiacion_id)
 
         # Elimina la venta
         VentaDAO.eliminar(conn, self._venta_id)
 
-        # Restaura el estado de moto
-        MotoDAO.actualizar_estado(conn, self._venta.id_moto, self._moto_estado_anterior)
+        # Restaura el estado anterior de la moto
+        MotoDAO.actualizar_estado(conn, self._venta.id_moto,
+                                  self._moto_estado_anterior)

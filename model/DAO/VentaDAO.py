@@ -4,7 +4,6 @@ from sqlite3 import Cursor
 from db.gestor_conexiones import ConexionSQLite3
 from model.VO.VentaVO import VentaVO
 from model.VO.MotoVO import MotoVO
-from model.VO.EmpleadoVO import EmpleadoVO
 
 from model.DAO.ClienteDAO import ClienteDAO
 from model.DAO.MotoDAO import MotoDAO
@@ -13,18 +12,33 @@ from model.DAO.FinanciacionDAO import FinanciacionDAO
 
 
 class VentaDAO:
+    """
+    DAO de Venta — solo persistencia, sin reglas de negocio.
+
+    Estrategias de carga usadas:
+      - obtener_por_id   : eager loading completo (cliente, moto, empleado, financiación)
+      - listar_por_*     : moto eager (necesaria para mostrar info) + financiación lazy
+    """
 
     @staticmethod
     def listar_por_cliente(conexion: ConexionSQLite3,
                            id_cliente: int) -> List[VentaVO]:
-
+        # Bug fix: columnas explícitas con alias para evitar colisión entre v.* y m.*
         sql: str = """
-            SELECT v.*, m.*
-            FROM Venta v
-            JOIN Moto m ON v.id_moto = m.id_moto
-            WHERE v.id_cliente = ?
+            SELECT v.id_venta,
+                   v.fecha_venta,
+                   v.precio_final,
+                   v.tipo_pago,
+                   v.id_cliente,
+                   v.id_moto      AS v_id_moto,
+                   v.id_empleado,
+                   m.id_moto      AS m_id_moto,
+                   m.vin, m.marca, m.modelo,
+                   m.anio, m.precio, m.color, m.estado
+            FROM   Venta v
+            JOIN   Moto  m ON v.id_moto = m.id_moto
+            WHERE  v.id_cliente = ?
         """
-
         cursor: Cursor = conexion.execute(sql, (id_cliente,))
         ventas: List[VentaVO] = []
 
@@ -32,14 +46,14 @@ class VentaDAO:
             r = dict(fila)
 
             moto = MotoVO(
-                id_moto=r['id_moto'],
+                id_moto=r['m_id_moto'],
                 vin=r['vin'],
                 marca=r['marca'],
                 modelo=r['modelo'],
                 anio=r['anio'],
                 precio=r['precio'],
                 color=r['color'],
-                estado=r['estado']
+                estado=r['estado'],
             )
 
             venta = VentaVO(
@@ -48,24 +62,84 @@ class VentaDAO:
                 precio_final=r['precio_final'],
                 tipo_pago=r['tipo_pago'],
                 id_cliente=r['id_cliente'],
-                id_moto=r['id_moto'],
-                id_empleado=r['id_empleado']
+                id_moto=r['v_id_moto'],
+                id_empleado=r['id_empleado'],
             )
-
             venta._moto_cache = moto
 
-            id_venta_capturado = r['id_venta']
-            venta._financiacion_loader = lambda id_v=id_venta_capturado: FinanciacionDAO.obtener_por_venta(conexion, id_v)
+            id_v = r['id_venta']
+            venta._financiacion_loader = (
+                lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conexion, id_v)
+            )
 
             ventas.append(venta)
 
         return ventas
 
+    @staticmethod
+    def listar_por_periodo(conexion: ConexionSQLite3,
+                           fecha_inicio: str,
+                           fecha_fin: str) -> List[VentaVO]:
+        """
+        Bug fix: método faltante. Devuelve ventas en el rango [fecha_inicio, fecha_fin].
+        Carga moto eager (necesaria para reportes) y financiación lazy.
+        """
+        sql: str = """
+            SELECT v.id_venta,
+                   v.fecha_venta,
+                   v.precio_final,
+                   v.tipo_pago,
+                   v.id_cliente,
+                   v.id_moto      AS v_id_moto,
+                   v.id_empleado,
+                   m.id_moto      AS m_id_moto,
+                   m.vin, m.marca, m.modelo,
+                   m.anio, m.precio, m.color, m.estado
+            FROM   Venta v
+            JOIN   Moto  m ON v.id_moto = m.id_moto
+            WHERE  v.fecha_venta BETWEEN ? AND ?
+            ORDER  BY v.fecha_venta DESC
+        """
+        cursor: Cursor = conexion.execute(sql, (fecha_inicio, fecha_fin))
+        ventas: List[VentaVO] = []
+
+        for fila in cursor:
+            r = dict(fila)
+
+            moto = MotoVO(
+                id_moto=r['m_id_moto'],
+                vin=r['vin'],
+                marca=r['marca'],
+                modelo=r['modelo'],
+                anio=r['anio'],
+                precio=r['precio'],
+                color=r['color'],
+                estado=r['estado'],
+            )
+
+            venta = VentaVO(
+                id_venta=r['id_venta'],
+                fecha_venta=r['fecha_venta'],
+                precio_final=r['precio_final'],
+                tipo_pago=r['tipo_pago'],
+                id_cliente=r['id_cliente'],
+                id_moto=r['v_id_moto'],
+                id_empleado=r['id_empleado'],
+            )
+            venta._moto_cache = moto
+
+            id_v = r['id_venta']
+            venta._financiacion_loader = (
+                lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conexion, id_v)
+            )
+
+            ventas.append(venta)
+
+        return ventas
 
     @staticmethod
     def obtener_por_id(conexion: ConexionSQLite3,
                        id_venta: int) -> Optional[VentaVO]:
-
         sql: str = "SELECT * FROM Venta WHERE id_venta = ?"
         cursor: Cursor = conexion.execute(sql, (id_venta,))
         fila = cursor.fetchone()
@@ -82,40 +156,36 @@ class VentaDAO:
             tipo_pago=r['tipo_pago'],
             id_cliente=r['id_cliente'],
             id_moto=r['id_moto'],
-            id_empleado=r['id_empleado']
+            id_empleado=r['id_empleado'],
         )
 
-        venta._cliente_cache = ClienteDAO.obtener_por_id(conexion, r['id_cliente'])
-        venta._moto_cache = MotoDAO.obtener_por_id(conexion, r['id_moto'])
+        # Eager loading completo para el detalle individual
+        venta._cliente_cache  = ClienteDAO.obtener_por_id(conexion, r['id_cliente'])
+        venta._moto_cache     = MotoDAO.obtener_por_id(conexion, r['id_moto'])
         venta._empleado_cache = EmpleadoDAO.obtener_por_id(conexion, r['id_empleado'])
-        venta.financiacion = FinanciacionDAO.obtener_por_venta(conexion, r['id_venta'])
+        venta.financiacion    = FinanciacionDAO.obtener_por_venta(conexion, r['id_venta'])
 
         return venta
-
 
     @staticmethod
     def insertar(conexion: ConexionSQLite3,
                  venta: VentaVO) -> int:
-
-        # 🔥 VALIDACIÓN
-        moto = MotoDAO.obtener_por_id(conexion, venta.id_moto)
-
-        if not moto or not moto.esta_disponible:
-            raise Exception("La moto no está disponible para la venta")
-
+        """
+        Persiste la venta y, si lleva financiación adjunta, también la persiste.
+        No realiza validaciones de negocio (esa responsabilidad es de VentaService).
+        """
         sql: str = """
             INSERT INTO Venta (fecha_venta, precio_final, tipo_pago,
                                id_cliente, id_moto, id_empleado)
             VALUES (date('now'), ?, ?, ?, ?, ?)
         """
-
         cursor: Cursor = conexion.cursor()
         cursor.execute(sql, (
             venta.precio_final,
             venta.tipo_pago,
             venta.id_cliente,
             venta.id_moto,
-            venta.id_empleado
+            venta.id_empleado,
         ))
 
         id_venta = cursor.lastrowid
@@ -123,16 +193,13 @@ class VentaDAO:
 
         if venta.financiacion:
             venta.financiacion.id_venta = id_venta
-
             if venta.financiacion.monto_cuota is None:
                 venta.financiacion.calcular_monto_cuota(venta.precio_final)
-
             FinanciacionDAO.insertar(conexion, venta.financiacion)
 
         MotoDAO.actualizar_estado(conexion, venta.id_moto, 'vendida')
 
         return id_venta
-
 
     @staticmethod
     def eliminar(conexion: ConexionSQLite3, id_venta: int) -> None:

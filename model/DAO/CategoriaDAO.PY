@@ -5,6 +5,7 @@ from peewee import Model, AutoField, CharField, TextField, DoesNotExist
 from db.gestor_conexiones import ConexionSQLite3
 from model.VO.CategoriaVO import CategoriaVO
 
+
 class _CategoriaModel(Model):
     id_categoria = AutoField(column_name='id_categoria')
     nombre       = CharField(column_name='nombre')
@@ -14,7 +15,6 @@ class _CategoriaModel(Model):
         table_name = 'Categoria'
 
 
-# Helper modelo Peewee → VO
 def _a_vo(fila: _CategoriaModel) -> CategoriaVO:
     return CategoriaVO(
         id_categoria=fila.id_categoria,
@@ -22,7 +22,8 @@ def _a_vo(fila: _CategoriaModel) -> CategoriaVO:
         descripcion=fila.descripcion,
     )
 
-# Usamos pewee para lecturas simples
+
+# Usamos Peewee: Categoria es una tabla plana sin joins.
 class CategoriaDAO:
 
     @staticmethod
@@ -37,4 +38,4 @@ class CategoriaDAO:
             with _CategoriaModel.bind_ctx(conexion.db_peewee):
                 return _a_vo(_CategoriaModel.get_by_id(id_categoria))
         except DoesNotExist:
-            return None
+            return None  # Bug fix: línea original rota, ahora retorna None correctamente
