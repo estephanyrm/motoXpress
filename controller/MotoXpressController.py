@@ -80,3 +80,17 @@ class MotoXpressController:
     # Categorías
     def listar_categorias(self):
         return self._categorias.listar_todas()
+
+    def crear_categoria(self, nombre: str, descripcion: str = None) -> int:
+        if not nombre or not nombre.strip():
+            raise ValueError("El nombre de la categoría no puede estar vacío.")
+        return self._categorias.crear(nombre.strip(), descripcion)
+
+    def actualizar_categoria(self, id_categoria: int,
+                             nombre: str, descripcion: str = None) -> None:
+        if not nombre or not nombre.strip():
+            raise ValueError("El nombre de la categoría no puede estar vacío.")
+        self._categorias.actualizar(id_categoria, nombre.strip(), descripcion)
+
+    def eliminar_categoria(self, id_categoria: int) -> None:
+        self._categorias.eliminar(id_categoria)

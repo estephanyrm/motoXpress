@@ -1,32 +1,40 @@
 # ─────────────────────────────────────────────
-#  MotoXpress — Estilos globales
+#  MotoXpress — Estilos globales (v3 — Rediseño profesional)
 # ─────────────────────────────────────────────
 
-# Paleta de colores (tema claro profesional)
-WHITE      = "#FFFFFF"
-OFF_WHITE  = "#F8F9FB"
-PANEL      = "#F1F3F7"
-BORDER     = "#DDE1E9"
-BORDER2    = "#C8CDD8"
-TEXT       = "#1A1D27"
-TEXT2      = "#5C6478"
-TEXT3      = "#8B92A5"
-ACCENT     = "#2563EB"
-ACCENT_L   = "#EEF3FD"
-ACCENT_H   = "#1D4ED8"
-SUCCESS    = "#16A34A"
-SUCCESS_L  = "#ECFDF5"
-DANGER     = "#DC2626"
-DANGER_L   = "#FEF2F2"
-WARNING    = "#D97706"
-WARNING_L  = "#FFFBEB"
-SIDEBAR_BG = "#1A1D27"
-SIDEBAR_T  = "#A8B0C4"
-SIDEBAR_A  = "#FFFFFF"
-SIDEBAR_HV = "#252836"
-SIDEBAR_SEL= "#2A2F42"
+SELECTED  = "#C4D8CC"
+ERROR_BG  = "#FEE2E2"
+ERROR_BD  = "#FCA5A5"   
 
-FONT_FAMILY = "'Segoe UI', 'SF Pro Display', 'Ubuntu', 'Helvetica Neue', sans-serif"
+WHITE      = "#FFFFFF"
+OFF_WHITE  = "#F7F8FA"
+PANEL      = "#EEF0F5"
+BORDER     = "#CACACE"
+BORDER2    = "#B0B0B8"
+TEXT       = "#111827"
+TEXT2      = "#374151"
+TEXT3      = "#6B7280"
+
+ACCENT     = "#1A3A2A"
+ACCENT_L   = "#254D38"
+ACCENT_H   = "#1D4ED8"
+ACCENT_XL  = "#DBEAFE"
+
+SUCCESS    = "#145C30"
+SUCCESS_L  = "#ECFDF5"
+DANGER     = "#991B1B"
+DANGER_L   = "#FEF2F2"
+WARNING    = "#92400E"
+WARNING_L  = "#FFFBEB"
+
+SIDEBAR_BG  = "#1A3A2A"
+SIDEBAR_T   = "#3D6B52"
+SIDEBAR_A   = "#FFFFFF" 
+SIDEBAR_HV  = "#1F2937"
+SIDEBAR_SEL = "#1E3A5F"
+SIDEBAR_ACC = "#3B82F6"
+
+FONT_FAMILY = "'Segoe UI', 'SF Pro Display', 'Helvetica Neue', 'Ubuntu', sans-serif"
 
 STYLE_GLOBAL = f"""
 QWidget {{
@@ -36,22 +44,25 @@ QWidget {{
     font-size: 14px;
 }}
 QScrollBar:vertical {{
-    background: {PANEL};
-    width: 6px;
+    background: transparent;
+    width: 5px;
     border-radius: 3px;
-    margin: 0;
+    margin: 4px 0;
 }}
 QScrollBar::handle:vertical {{
     background: {BORDER2};
     border-radius: 3px;
-    min-height: 20px;
+    min-height: 24px;
+}}
+QScrollBar::handle:vertical:hover {{
+    background: {ACCENT};
 }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
     height: 0;
 }}
 QScrollBar:horizontal {{
-    background: {PANEL};
-    height: 6px;
+    background: transparent;
+    height: 5px;
     border-radius: 3px;
 }}
 QScrollBar::handle:horizontal {{
@@ -65,9 +76,9 @@ QToolTip {{
     background: {TEXT};
     color: {WHITE};
     border: none;
-    padding: 6px 10px;
+    padding: 6px 12px;
     font-size: 12px;
-    border-radius: 4px;
+    border-radius: 5px;
 }}
 QSpinBox::up-button, QSpinBox::down-button,
 QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {{
@@ -79,15 +90,20 @@ STYLE_INPUT = f"""
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{
     background: {WHITE};
     border: 1.5px solid {BORDER};
-    border-radius: 7px;
+    border-radius: 8px;
     padding: 9px 13px;
     color: {TEXT};
-    font-size: 14px;
-    selection-background-color: {ACCENT_L};
+    font-size: 13px;
+    font-family: {FONT_FAMILY};
+    selection-background-color: {ACCENT_XL};
 }}
 QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
     border-color: {ACCENT};
     background: {WHITE};
+    outline: none;
+}}
+QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover {{
+    border-color: {BORDER2};
 }}
 QLineEdit:read-only {{
     color: {TEXT2};
@@ -95,7 +111,11 @@ QLineEdit:read-only {{
 }}
 QComboBox::drop-down {{
     border: none;
-    width: 30px;
+    width: 32px;
+    border-left: 1px solid {BORDER};
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background: transparent;
 }}
 QComboBox::down-arrow {{
     image: none;
@@ -103,12 +123,12 @@ QComboBox::down-arrow {{
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-top: 5px solid {TEXT2};
-    margin-right: 8px;
+    margin-right: 10px;
 }}
 QComboBox QAbstractItemView {{
     background: {WHITE};
     border: 1.5px solid {BORDER};
-    border-radius: 7px;
+    border-radius: 8px;
     selection-background-color: {ACCENT_L};
     color: {TEXT};
     outline: none;
@@ -116,8 +136,8 @@ QComboBox QAbstractItemView {{
 }}
 QComboBox QAbstractItemView::item {{
     padding: 8px 14px;
-    min-height: 30px;
-    border-radius: 4px;
+    min-height: 32px;
+    border-radius: 5px;
 }}
 QComboBox QAbstractItemView::item:selected {{
     background: {ACCENT_L};
@@ -129,10 +149,13 @@ STYLE_INPUT_ERROR = f"""
 QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox {{
     background: {DANGER_L};
     border: 1.5px solid {DANGER};
-    border-radius: 7px;
+    border-radius: 8px;
     padding: 9px 13px;
     color: {TEXT};
-    font-size: 14px;
+    font-size: 13px;
+}}
+QLineEdit:focus, QComboBox:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
+    border-color: {DANGER};
 }}
 """
 
@@ -140,36 +163,44 @@ STYLE_TABLE = f"""
 QTableWidget {{
     background: {WHITE};
     border: 1.5px solid {BORDER};
-    border-radius: 8px;
-    gridline-color: {PANEL};
+    border-radius: 10px;
+    gridline-color: {OFF_WHITE};
     color: {TEXT};
     font-size: 13px;
     outline: none;
     selection-background-color: {ACCENT_L};
+    alternate-background-color: {OFF_WHITE};
+}}
+QHeaderView {{
+    background: {PANEL};
 }}
 QHeaderView::section {{
     background: {PANEL};
-    color: {TEXT2};
+    color: {TEXT3};
     border: none;
     border-bottom: 1.5px solid {BORDER};
     border-right: 1px solid {BORDER};
-    padding: 10px 14px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.6px;
+    padding: 10px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
+    font-family: {FONT_FAMILY};
 }}
 QHeaderView::section:last {{
     border-right: none;
 }}
 QTableWidget::item {{
-    padding: 10px 14px;
-    border-bottom: 1px solid {PANEL};
+    padding: 11px 16px;
+    border-bottom: 1px solid {OFF_WHITE};
     color: {TEXT};
 }}
 QTableWidget::item:selected {{
     background: {ACCENT_L};
     color: {ACCENT};
+}}
+QTableWidget::item:hover {{
+    background: {OFF_WHITE};
 }}
 QTableCornerButton::section {{
     background: {PANEL};
@@ -181,13 +212,14 @@ STYLE_CHECKBOX = f"""
 QCheckBox {{
     color: {TEXT};
     font-size: 13px;
-    spacing: 8px;
+    spacing: 9px;
     background: transparent;
     border: none;
+    font-family: {FONT_FAMILY};
 }}
 QCheckBox::indicator {{
-    width: 18px;
-    height: 18px;
+    width: 17px;
+    height: 17px;
     border: 1.5px solid {BORDER2};
     border-radius: 5px;
     background: {WHITE};
@@ -198,10 +230,18 @@ QCheckBox::indicator:checked {{
 }}
 QCheckBox::indicator:hover {{
     border-color: {ACCENT};
+    background: {ACCENT_L};
 }}
 """
 
-def card_style(radius=10, shadow=False):
+SIDEBAR_STYLE = f"""
+QWidget#sidebar {{
+    background: {SIDEBAR_BG};
+    border: none;
+}}
+"""
+
+def card_style(radius=10):
     return f"""
         QFrame {{
             background-color: {WHITE};
@@ -216,11 +256,12 @@ def btn_primary():
             background-color: {ACCENT};
             color: #FFFFFF;
             border: none;
-            border-radius: 7px;
-            padding: 9px 20px;
+            border-radius: 8px;
+            padding: 9px 22px;
             font-weight: 600;
             font-size: 13px;
             letter-spacing: 0.2px;
+            font-family: {FONT_FAMILY};
         }}
         QPushButton:hover {{
             background-color: {ACCENT_H};
@@ -240,9 +281,10 @@ def btn_secondary():
             background-color: {WHITE};
             color: {TEXT2};
             border: 1.5px solid {BORDER};
-            border-radius: 7px;
-            padding: 9px 18px;
+            border-radius: 8px;
+            padding: 9px 20px;
             font-size: 13px;
+            font-family: {FONT_FAMILY};
         }}
         QPushButton:hover {{
             background-color: {PANEL};
@@ -260,13 +302,15 @@ def btn_danger():
             background-color: {DANGER_L};
             color: {DANGER};
             border: 1.5px solid #FCA5A5;
-            border-radius: 7px;
-            padding: 9px 18px;
+            border-radius: 8px;
+            padding: 9px 20px;
             font-size: 13px;
             font-weight: 600;
+            font-family: {FONT_FAMILY};
         }}
         QPushButton:hover {{
             background-color: #FEE2E2;
+            border-color: {DANGER};
         }}
     """
 
@@ -276,19 +320,29 @@ def btn_success():
             background-color: {SUCCESS};
             color: #FFFFFF;
             border: none;
-            border-radius: 7px;
-            padding: 9px 20px;
+            border-radius: 8px;
+            padding: 9px 22px;
             font-weight: 600;
             font-size: 13px;
+            font-family: {FONT_FAMILY};
         }}
         QPushButton:hover {{
-            background-color: #15803D;
+            background-color: #047857;
         }}
     """
 
-SIDEBAR_STYLE = f"""
-QWidget#sidebar {{
-    background: {SIDEBAR_BG};
-    border-right: none;
-}}
-"""
+def btn_ghost():
+    return f"""
+        QPushButton {{
+            background-color: transparent;
+            color: {ACCENT};
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }}
+        QPushButton:hover {{
+            background-color: {ACCENT_L};
+        }}
+    """

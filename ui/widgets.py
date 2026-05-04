@@ -1,27 +1,30 @@
 # ─────────────────────────────────────────────
-#  MotoXpress — Widgets reutilizables
+#  MotoXpress — Widgets reutilizables (v3)
 # ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QLabel, QFrame, QHBoxLayout, QVBoxLayout,
     QMessageBox, QPushButton, QWidget, QCheckBox,
-    QApplication
+    QApplication, QGraphicsDropShadowEffect
 )
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QFont
 
 from ui.styles import (
-    TEXT, TEXT2, TEXT3, ACCENT, ACCENT_L, SUCCESS, SUCCESS_L,
-    DANGER, DANGER_L, WARNING, WARNING_L, BORDER, PANEL, WHITE,
-    OFF_WHITE, btn_primary, btn_secondary, STYLE_CHECKBOX
+    TEXT, TEXT2, TEXT3, ACCENT, ACCENT_L, ACCENT_XL, SUCCESS, SUCCESS_L,
+    DANGER, DANGER_L, WARNING, WARNING_L, BORDER, BORDER2, PANEL, WHITE,
+    OFF_WHITE, btn_primary, btn_secondary, btn_danger, STYLE_CHECKBOX,
+    FONT_FAMILY
 )
 
 
+# ── Etiquetas ─────────────────────────────────────────────────────────────
 def make_label(text, size=14, bold=False, color=TEXT, wrap=False, italic=False):
     lbl = QLabel(text)
-    weight = "700" if bold else ("400" if not italic else "400")
+    weight = "700" if bold else "400"
     style = (
         f"color: {color}; font-size: {size}px; "
-        f"font-weight: {weight}; background: transparent; border: none;"
+        f"font-weight: {weight}; background: transparent; border: none; "
+        f"font-family: {FONT_FAMILY};"
     )
     if italic:
         style += " font-style: italic;"
@@ -31,6 +34,7 @@ def make_label(text, size=14, bold=False, color=TEXT, wrap=False, italic=False):
     return lbl
 
 
+# ── Divisores ─────────────────────────────────────────────────────────────
 def make_divider(vertical=False):
     line = QFrame()
     if vertical:
@@ -44,15 +48,17 @@ def make_divider(vertical=False):
     return line
 
 
+# ── Badges ────────────────────────────────────────────────────────────────
 def make_badge(text, color=ACCENT, bg=ACCENT_L, size=11):
     b = QLabel(text)
     b.setStyleSheet(f"""
         background: {bg};
         color: {color};
         border-radius: 5px;
-        padding: 3px 9px;
+        padding: 3px 10px;
         font-size: {size}px;
         font-weight: 600;
+        font-family: {FONT_FAMILY};
     """)
     b.setAlignment(Qt.AlignCenter)
     return b
@@ -84,43 +90,44 @@ def make_checkbox(text=""):
     return cb
 
 
-def show_error(parent, msg):
+# ── Diálogos mejorados ────────────────────────────────────────────────────
+def _base_dialog(parent, title, msg, icon, btn_style_fn):
+    """Helper interno para crear diálogos estilizados."""
     d = QMessageBox(parent)
-    d.setWindowTitle("Error")
+    d.setWindowTitle(title)
     d.setText(msg)
-    d.setIcon(QMessageBox.Warning)
+    d.setIcon(icon)
     d.setStyleSheet(f"""
-        QMessageBox {{ background: {WHITE}; color: {TEXT}; }}
-        QLabel {{ color: {TEXT}; font-size: 14px; }}
-        QPushButton {{ {btn_secondary()} }}
+        QMessageBox {{
+            background: {WHITE};
+            color: {TEXT};
+            font-family: {FONT_FAMILY};
+        }}
+        QLabel {{
+            color: {TEXT};
+            font-size: 14px;
+            font-family: {FONT_FAMILY};
+            background: transparent;
+        }}
+        QPushButton {{ {btn_style_fn()} }}
     """)
+    return d
+
+
+def show_error(parent, msg, title="Error"):
+    d = _base_dialog(parent, title, msg, QMessageBox.Warning, btn_secondary)
     d.exec_()
 
 
 def show_ok(parent, msg, title="Operación exitosa"):
-    d = QMessageBox(parent)
-    d.setWindowTitle(title)
-    d.setText(msg)
-    d.setIcon(QMessageBox.Information)
-    d.setStyleSheet(f"""
-        QMessageBox {{ background: {WHITE}; color: {TEXT}; }}
-        QLabel {{ color: {TEXT}; font-size: 14px; }}
-        QPushButton {{ {btn_primary()} }}
-    """)
+    d = _base_dialog(parent, title, msg, QMessageBox.Information, btn_primary)
     d.exec_()
 
 
 def show_confirm(parent, msg, title="Confirmar"):
-    d = QMessageBox(parent)
-    d.setWindowTitle(title)
-    d.setText(msg)
+    d = _base_dialog(parent, title, msg, QMessageBox.Question, btn_secondary)
     d.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
     d.setDefaultButton(QMessageBox.No)
-    d.setStyleSheet(f"""
-        QMessageBox {{ background: {WHITE}; color: {TEXT}; }}
-        QLabel {{ color: {TEXT}; font-size: 14px; }}
-        QPushButton {{ {btn_secondary()} }}
-    """)
     return d.exec_() == QMessageBox.Yes
 
 
@@ -129,6 +136,7 @@ def mark_invalid(widget, invalid: bool):
     widget.setStyleSheet(STYLE_INPUT_ERROR if invalid else STYLE_INPUT)
 
 
+# ── StatCard — tarjeta de dashboard ──────────────────────────────────────
 class StatCard(QFrame):
     """Tarjeta de estadística para el dashboard."""
     def __init__(self, icon, label, value, color=ACCENT, parent=None):
@@ -137,23 +145,32 @@ class StatCard(QFrame):
             QFrame {{
                 background: {WHITE};
                 border: 1.5px solid {BORDER};
-                border-radius: 10px;
+                border-radius: 12px;
             }}
         """)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 18, 20, 18)
-        layout.setSpacing(8)
+        layout.setContentsMargins(22, 20, 22, 20)
+        layout.setSpacing(6)
 
         top = QHBoxLayout()
         icon_lbl = make_label(icon, size=20)
         top.addWidget(icon_lbl)
         top.addStretch()
+        color_dot = QLabel()
+        color_dot.setFixedSize(8, 8)
+        color_dot.setStyleSheet(f"""
+            background: {color};
+            border-radius: 4px;
+        """)
+        top.addWidget(color_dot)
         layout.addLayout(top)
 
-        layout.addWidget(make_label(value, size=28, bold=True, color=color))
-        layout.addWidget(make_label(label, size=12, color=TEXT2))
+        layout.addSpacing(4)
+        layout.addWidget(make_label(value, size=30, bold=True, color=color))
+        layout.addWidget(make_label(label, size=12, color=TEXT3))
 
 
+# ── SectionHeader ─────────────────────────────────────────────────────────
 class SectionHeader(QWidget):
     """Encabezado de sección con título y subtítulo."""
     def __init__(self, title, subtitle="", parent=None):
@@ -167,6 +184,7 @@ class SectionHeader(QWidget):
             layout.addWidget(make_label(subtitle, size=13, color=TEXT2))
 
 
+# ── EmptyState ────────────────────────────────────────────────────────────
 class EmptyState(QWidget):
     """Mensaje cuando no hay datos."""
     def __init__(self, icon="📭", message="Sin resultados", parent=None):
@@ -178,3 +196,39 @@ class EmptyState(QWidget):
         layout.addWidget(make_label(icon, size=36), alignment=Qt.AlignCenter)
         layout.addWidget(make_label(message, size=14, color=TEXT3),
                          alignment=Qt.AlignCenter)
+
+
+# ── InlineToast — notificación no-modal ──────────────────────────────────
+class InlineToast(QFrame):
+    """
+    Pequeña notificación inline que aparece debajo de una acción y
+    desaparece sola después de unos segundos.
+    Uso: toast = InlineToast(parent, "Cambios guardados", success=True)
+         layout.addWidget(toast)
+         toast.show_and_hide()
+    """
+    def __init__(self, parent=None, message="", success=True):
+        super().__init__(parent)
+        color  = SUCCESS if success else DANGER
+        bg     = SUCCESS_L if success else DANGER_L
+        prefix = "✓" if success else "✗"
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {bg};
+                border: 1px solid {color};
+                border-radius: 8px;
+                padding: 2px;
+            }}
+        """)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setSpacing(8)
+        layout.addWidget(make_label(f"{prefix}  {message}", size=13, color=color))
+        self.setVisible(False)
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.timeout.connect(self.hide)
+
+    def show_and_hide(self, ms=3000):
+        self.setVisible(True)
+        self._timer.start(ms)

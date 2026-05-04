@@ -100,7 +100,11 @@ class EmpleadosPage(QWidget):
             ]
 
         if rol != "Todos los roles":
-            result = [e for e in result if (e.rol or "") == rol]
+            rol = rol.lower().strip()
+            result = [
+                e for e in result
+                if (e.rol or "").lower().strip() == rol
+            ]
 
         self._populate(result)
 

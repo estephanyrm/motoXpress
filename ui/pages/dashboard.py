@@ -22,7 +22,14 @@ class DashboardPage(QWidget):
         self._build()
 
     def _build(self):
-        scroll = QScrollArea(self)
+        # Crea el layout exterior (solo una vez en la vida del widget)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self._build_inner(outer)
+
+    def _build_inner(self, outer: QVBoxLayout):
+        """Construye el scroll + contenido interior. Se puede llamar varias veces."""
+        scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setStyleSheet("background: transparent;")
@@ -31,8 +38,6 @@ class DashboardPage(QWidget):
         container.setStyleSheet("background: transparent;")
         scroll.setWidget(container)
 
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
 
         layout = QVBoxLayout(container)
@@ -100,11 +105,6 @@ class DashboardPage(QWidget):
             precio_item.setForeground(QColor(SUCCESS))
             tbl.setItem(i, 5, precio_item)
 
-            # Categorías: cargar lazy si es necesario
-            try:
-                m.cargar_categorias()
-            except Exception:
-                pass
             cats_txt = ", ".join(c.nombre for c in m.categorias) if m.categorias else "Sin categoría"
             cat_item = QTableWidgetItem(cats_txt)
             cat_item.setForeground(QColor(TEXT2))
@@ -118,12 +118,22 @@ class DashboardPage(QWidget):
         return tbl
 
     def refresh(self):
-        """Reconstruye el dashboard."""
-        layout = self.layout()
-        # Obtener el scroll area y reconectar
-        # Más simple: recrear toda la página
-        while layout.count():
-            item = layout.takeAt(0)
+        """
+        Reconstruye el contenido del dashboard sin tocar el QVBoxLayout(self)
+        que ya fue asignado en el primer _build(). Solo vacía y recrea el
+        QScrollArea que vive dentro de ese layout.
+        """
+        outer = self.layout()
+        if outer is None:
+            self._build()
+            return
+
+        # Eliminar todos los widgets hijos del layout exterior (el QScrollArea)
+        while outer.count():
+            item = outer.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        self._build()
+
+        # Recrear solo el scroll + container interior
+        # Reutilizamos el outer layout ya existente, no creamos uno nuevo
+        self._build_inner(outer)

@@ -17,25 +17,30 @@ class MotoDAO:
             WHERE estado = 'disponible'
         """
         cursor: Cursor = conexion.execute(sql)
+        filas = cursor.fetchall()  # materializar antes de abrir nuevos cursores
 
         motos: List[MotoVO] = []
 
-        for fila in cursor:
+        for fila in filas:
             r = dict(fila)
+            id_moto = r['id_moto']
+
+            # Carga eager dentro de la misma conexion abierta.
+            # El lazy loader (closure sobre conexion) falla porque la
+            # conexion ya esta cerrada al momento de llamar cargar_categorias().
+            categorias = MotoCategoriaDAO.listar_categorias_de_moto(conexion, id_moto)
 
             moto = MotoVO(
-                id_moto=r['id_moto'],
+                id_moto=id_moto,
                 vin=r['vin'],
                 marca=r['marca'],
                 modelo=r['modelo'],
                 anio=r['anio'],
                 precio=r['precio'],
                 color=r['color'],
-                estado=r['estado']
+                estado=r['estado'],
+                categorias=categorias,
             )
-
-            id_moto_capturado = r['id_moto']
-            moto._categorias_loader = lambda id_m=id_moto_capturado: MotoCategoriaDAO.listar_categorias_de_moto(conexion, id_m)
 
             motos.append(moto)
 
