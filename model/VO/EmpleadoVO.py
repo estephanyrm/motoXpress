@@ -6,4 +6,4 @@ class EmpleadoVO:
     nombre: str = field(default=None)
     apellido: str = field(default=None)
     rol: str = field(default=None)
-    email:  str = field(default=None)
+    email: str = field(default=None)
