@@ -24,16 +24,15 @@ class RegistrarVentaCommand:
         self._financiacion_id: Optional[int] = None
 
     def execute(self, conn: ConexionSQLite3) -> None:
-        # 1. Guarda estado previo de la moto (necesario para undo)
+        # Guarda estado previo de la moto (necesario para undo)
         moto = MotoDAO.obtener_por_id(conn, self._venta.id_moto)
         if moto is None:
             raise ValueError("Moto no encontrada.")
         self._moto_estado_anterior = moto.estado
 
-        # 2. VentaDAO.insertar maneja todo: INSERT Venta + INSERT Financiacion + UPDATE Moto
         self._venta_id = VentaDAO.insertar(conn, self._venta)
 
-        # 3. Guarda el id de la financiacion creada para poder eliminarla en undo
+        # Guarda el id de la financiacion creada para poder eliminarla en undo
         if self._venta.financiacion:
             fin = FinanciacionDAO.obtener_por_venta(conn, self._venta_id)
             if fin:
@@ -43,7 +42,7 @@ class RegistrarVentaCommand:
         if self._venta_id is None:
             raise RuntimeError("No se puede deshacer: el comando no ha sido ejecutado.")
 
-        # Elimina financiación primero (restricción FK)
+        # Elimina financiación primero
         if self._financiacion_id is not None:
             FinanciacionDAO.eliminar(conn, self._financiacion_id)
 

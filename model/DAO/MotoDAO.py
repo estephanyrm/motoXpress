@@ -8,6 +8,7 @@ from model.DAO.MotoCategoriaDAO import MotoCategoriaDAO
 
 
 class MotoDAO:
+    # Carga eager, necesita categorias para mostrar en la tabla de motos
     @staticmethod
     def listar_disponibles(conexion: ConexionSQLite3) -> List[MotoVO]:
         sql: str = """
@@ -42,7 +43,7 @@ class MotoDAO:
 
         return motos
 
-
+    # Carga eager porque se necesita mostrar las categorías de la moto en la vista de detalle
     @staticmethod
     def obtener_por_id(conexion: ConexionSQLite3,
                        id_moto: int) -> Optional[MotoVO]:

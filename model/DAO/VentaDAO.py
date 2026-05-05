@@ -12,6 +12,7 @@ from model.DAO.FinanciacionDAO import FinanciacionDAO
 
 
 class VentaDAO:
+    # Carga eager de moto y venta, carga lazy de financiacion
     @staticmethod
     def listar_por_cliente(conexion: ConexionSQLite3,
                            id_cliente: int) -> List[VentaVO]:
@@ -67,6 +68,8 @@ class VentaDAO:
 
         return ventas
 
+    # Carga Eager de Moto y Venta para optimizar el listado por fechas.
+    # Carga Lazy de Financiación para evitar consultas innecesarias en reportes masivos.
     @staticmethod
     def listar_por_periodo(conexion: ConexionSQLite3,
                            fecha_inicio: str,
@@ -124,6 +127,7 @@ class VentaDAO:
 
         return ventas
 
+    # Carga Eager completa para obtener toda la información de una venta individual, optimizando consultas posteriores a través de caching interno.
     @staticmethod
     def obtener_por_id(conexion: ConexionSQLite3,
                        id_venta: int) -> Optional[VentaVO]:

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Callable  # Callable se mantiene para los lazy loaders de cliente/moto/empleado
+from typing import Optional, Callable  
 from datetime import datetime
 
 from model.VO.ClienteVO import ClienteVO
@@ -21,7 +21,7 @@ class VentaVO:
     # relacion de composición
     financiacion: Optional[FinanciacionVO] = field(default=None)
 
-    # Lazy loader
+    # relacion de dependencia porque no es parte de la venta, es solo una referencia al cliente que realizó la compra
     _cliente_loader: Optional[Callable[[], Optional[ClienteVO]]] = field(default=None, repr=False)
     _cliente_cache: Optional[ClienteVO] = field(default=None, repr=False)
 
@@ -31,6 +31,7 @@ class VentaVO:
             self._cliente_cache = self._cliente_loader()
         return self._cliente_cache
 
+    # relacion de dependencia porque no es parte de la venta, es solo una referencia a la moto vendida
     _moto_loader: Optional[Callable[[], Optional[MotoVO]]] = field(default=None, repr=False)
     _moto_cache: Optional[MotoVO] = field(default=None, repr=False)
 
@@ -40,6 +41,7 @@ class VentaVO:
             self._moto_cache = self._moto_loader()
         return self._moto_cache
 
+    # relacion de dependencia porque no es parte de la venta, es solo una referencia al empleado que realizó la venta
     _empleado_loader: Optional[Callable[[], Optional[EmpleadoVO]]] = field(default=None, repr=False)
     _empleado_cache: Optional[EmpleadoVO] = field(default=None, repr=False)
 

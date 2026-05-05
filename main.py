@@ -17,12 +17,6 @@ from ui.pyqt5_view import launch_ui
 
 
 def build_controller() -> MotoXpressController:
-    """
-    Factory principal — construye el árbol de dependencias en orden:
-      UndoRedoManager  (compartido)
-      Services         (reciben lo que necesitan)
-      Controller       (recibe los services)
-    """
     undo_redo = UndoRedoManager()
 
     venta_service     = VentaService(undo_redo)

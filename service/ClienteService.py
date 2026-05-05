@@ -20,12 +20,6 @@ class ClienteService:
             return ClienteDAO.buscar_por_cedula(conn, cedula)
 
     def registrar(self, cliente: ClienteVO) -> int:
-        """
-        Inserta un cliente nuevo.
-        Reglas de negocio:
-          - Nombre, apellido y cédula son obligatorios.
-          - La cédula debe ser única.
-        """
         if not cliente.nombre or not cliente.apellido or not cliente.cedula:
             raise ValueError("Nombre, apellido y cédula son obligatorios.")
 

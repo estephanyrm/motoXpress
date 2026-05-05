@@ -7,12 +7,12 @@ from db.gestor_conexiones import ConexionSQLite3
 from model.VO.ClienteVO import ClienteVO
 
 class _ClienteModel(Model):
-    id_cliente     = AutoField(column_name='id_cliente')
-    nombre         = CharField(column_name='nombre')
-    apellido       = CharField(column_name='apellido')
-    cedula         = CharField(column_name='cedula')
-    telefono       = CharField(column_name='telefono')
-    email          = CharField(column_name='email')
+    id_cliente = AutoField(column_name='id_cliente')
+    nombre = CharField(column_name='nombre')
+    apellido = CharField(column_name='apellido')
+    cedula = CharField(column_name='cedula')
+    telefono = CharField(column_name='telefono')
+    email = CharField(column_name='email')
     fecha_registro = DateTimeField(column_name='fecha_registro', null=True)
 
     class Meta:
