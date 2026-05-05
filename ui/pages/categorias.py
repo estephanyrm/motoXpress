@@ -28,7 +28,7 @@ class CategoriasPage(QWidget):
         self._ctrl = controller
         self._build()
 
-    # Construcción de la UI 
+    # ── Construcción de la UI ─────────────────────────────────────────────
     def _build(self):
         root = QVBoxLayout(self)
         root.setContentsMargins(32, 28, 32, 28)
@@ -63,11 +63,11 @@ class CategoriasPage(QWidget):
 
         # Columna izquierda: lista de categorías
         self._left_panel = self._build_left_panel()
-        cols.addWidget(self._left_panel, stretch=3)
+        cols.addWidget(self._left_panel)
 
         # Columna derecha: asignar categoría a moto
-        right_panel = self._build_right_panel()
-        cols.addWidget(right_panel, stretch=2)
+        # right_panel = self._build_right_panel()
+        # cols.addWidget(right_panel, stretch=2)
 
         root.addLayout(cols)
         self._reload()
@@ -202,7 +202,7 @@ class CategoriasPage(QWidget):
     def _reload(self):
         """Recarga categorías y combo de motos."""
         self._load_cats()
-        self._load_moto_combo()
+        # self._load_moto_combo()
 
     def _load_cats(self):
         """Limpia y repopula las cards de categoría."""
