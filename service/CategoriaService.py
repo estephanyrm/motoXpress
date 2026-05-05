@@ -19,8 +19,8 @@ class CategoriaService:
         with connection_factory() as conn:
             return CategoriaDAO.insertar(conn, nombre, descripcion)
 
-    def actualizar(self, id_categoria: int, nombre: str,
-                   descripcion: str = None) -> None:
+    def actualizar(self, id_categoria: int,
+                   nombre: str, descripcion: str = None) -> None:
         with connection_factory() as conn:
             CategoriaDAO.actualizar(conn, id_categoria, nombre, descripcion)
 

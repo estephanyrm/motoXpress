@@ -37,8 +37,11 @@ class MotoXpressController:
     def rehacer_venta(self) -> bool:
         return self._ventas.rehacer_ultima_venta()
 
-    def detalle_venta(self, id_venta: int) -> Optional[VentaVO]:
-        return self._ventas.obtener_detalle(id_venta)
+    def puede_deshacer_venta(self) -> bool:
+        return self._ventas.puede_deshacer()
+
+    def puede_rehacer_venta(self) -> bool:
+        return self._ventas.puede_rehacer()
 
     def ventas_por_cliente(self, id_cliente: int) -> List[VentaVO]:
         return self._ventas.listar_por_cliente(id_cliente)
@@ -57,15 +60,9 @@ class MotoXpressController:
                        ids_categorias: Optional[List[int]] = None) -> int:
         return self._motos.registrar(moto, ids_categorias)
 
-    def cambiar_estado_moto(self, id_moto: int, nuevo_estado: str) -> None:
-        self._motos.cambiar_estado(id_moto, nuevo_estado)
-
     # Clientes
     def listar_clientes(self) -> List[ClienteVO]:
         return self._clientes.listar()
-
-    def buscar_cliente_cedula(self, cedula: str) -> Optional[ClienteVO]:
-        return self._clientes.buscar_por_cedula(cedula)
 
     def registrar_cliente(self, cliente: ClienteVO) -> int:
         return self._clientes.registrar(cliente)
@@ -73,9 +70,6 @@ class MotoXpressController:
     # Empleados
     def listar_empleados(self):
         return self._empleados.listar()
-
-    def listar_empleados_por_rol(self, rol: str):
-        return self._empleados.listar_por_rol(rol)
 
     # Categorías
     def listar_categorias(self):

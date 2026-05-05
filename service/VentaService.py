@@ -90,6 +90,12 @@ class VentaService:
 
         return True
 
+    def puede_deshacer(self) -> bool:
+        return self._undo_redo.tiene_undo()
+
+    def puede_rehacer(self) -> bool:
+        return self._undo_redo.tiene_redo()
+
     def obtener_detalle(self, id_venta: int) -> Optional[VentaVO]:
         # Eager loading: cliente, moto, empleado y financiación.
         with connection_factory() as conn:

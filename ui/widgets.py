@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Widgets reutilizables (v3)
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QLabel, QFrame, QHBoxLayout, QVBoxLayout,
     QMessageBox, QPushButton, QWidget, QCheckBox,
@@ -17,7 +14,7 @@ from ui.styles import (
 )
 
 
-# ── Etiquetas ─────────────────────────────────────────────────────────────
+# Etiquetas 
 def make_label(text, size=14, bold=False, color=TEXT, wrap=False, italic=False):
     lbl = QLabel(text)
     weight = "700" if bold else "400"

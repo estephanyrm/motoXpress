@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Callable
+from typing import Optional, Callable  # Callable se mantiene para los lazy loaders de cliente/moto/empleado
 from datetime import datetime
 
 from model.VO.ClienteVO import ClienteVO
@@ -20,13 +20,6 @@ class VentaVO:
 
     # relacion de composición
     financiacion: Optional[FinanciacionVO] = field(default=None)
-
-    # Lazy opcional
-    _financiacion_loader: Optional[Callable[[], Optional[FinanciacionVO]]] = field(default=None, repr=False)
-
-    def cargar_financiacion(self):
-        if self.financiacion is None and self._financiacion_loader:
-            self.financiacion = self._financiacion_loader()
 
     # Lazy loader
     _cliente_loader: Optional[Callable[[], Optional[ClienteVO]]] = field(default=None, repr=False)

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, List, Callable
+from typing import Optional, List
 
 from model.VO.CategoriaVO import CategoriaVO
 
@@ -18,18 +18,6 @@ class MotoVO:
     # relacion de agregacion
     categorias: List[CategoriaVO] = field(default_factory=list)
 
-    # Lazy opcional
-    _categorias_loader: Optional[Callable[[], List[CategoriaVO]]] = field(default=None, repr=False)
-
-    def cargar_categorias(self):
-        if not self.categorias and self._categorias_loader:
-            self.categorias = self._categorias_loader()
-
     @property
     def esta_disponible(self) -> bool:
         return self.estado == 'disponible'
-
-    def marcar_como_vendida(self):
-        if not self.esta_disponible:
-            raise ValueError("La moto ya está vendida")
-        self.estado = 'vendida'

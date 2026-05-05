@@ -1,12 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página de Categorías (v3)
-#  Cambios clave:
-#  1. CRUD completo: crear, editar, eliminar categorías
-#  2. Asignación de categorías a motos corregida
-#  3. Validaciones en formularios con mensajes claros
-#  4. UI rediseñada: layout de 3 zonas, cards con acciones
-#  5. Estado reactivo: la lista se refresca tras cada operación
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QFrame, QScrollArea, QLabel, QSizePolicy,
@@ -29,9 +20,7 @@ from ui.widgets import (
 )
 
 
-# ─────────────────────────────────────────────
 #  Página principal de Categorías
-# ─────────────────────────────────────────────
 class CategoriasPage(QWidget):
 
     def __init__(self, controller, parent=None):
@@ -39,7 +28,7 @@ class CategoriasPage(QWidget):
         self._ctrl = controller
         self._build()
 
-    # ── Construcción de la UI ─────────────────────────────────────────────
+    # Construcción de la UI 
     def _build(self):
         root = QVBoxLayout(self)
         root.setContentsMargins(32, 28, 32, 28)
@@ -291,16 +280,44 @@ class CategoriasPage(QWidget):
 
         # Botón Editar
         btn_edit = QPushButton("Editar")
-        btn_edit.setFixedHeight(30)
-        btn_edit.setStyleSheet(btn_secondary())
+        btn_edit.setFixedHeight(32)
+        btn_edit.setMinimumWidth(90)
+        btn_edit.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {ACCENT};
+                color: #FFFFFF;
+                border: none;
+                border-radius: 7px;
+                font-size: 12px;
+                font-weight: 600;
+                font-family: {FONT_FAMILY};
+            }}
+            QPushButton:hover {{
+                background-color: {ACCENT_H};
+            }}
+        """)
         btn_edit.setCursor(Qt.PointingHandCursor)
         btn_edit.clicked.connect(lambda _, c=cat: self._abrir_form_editar(c))
         cl.addWidget(btn_edit)
 
         # Botón Eliminar
         btn_del = QPushButton("Eliminar")
-        btn_del.setFixedHeight(30)
-        btn_del.setStyleSheet(btn_danger())
+        btn_del.setFixedHeight(32)
+        btn_del.setMinimumWidth(90)
+        btn_del.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {DANGER};
+                color: #FFFFFF;
+                border: none;
+                border-radius: 7px;
+                font-size: 12px;
+                font-weight: 600;
+                font-family: {FONT_FAMILY};
+            }}
+            QPushButton:hover {{
+                background-color: #7F1D1D;
+            }}
+        """)
         btn_del.setCursor(Qt.PointingHandCursor)
         btn_del.clicked.connect(lambda _, c=cat: self._eliminar_categoria(c))
         cl.addWidget(btn_del)
@@ -524,7 +541,7 @@ class _CategoriaDialog(QDialog):
         btn_row.addWidget(btn_cancel)
         btn_row.addStretch()
 
-        btn_save = QPushButton("  Guardar")
+        btn_save = QPushButton("Guardar")
         btn_save.setStyleSheet(btn_primary())
         btn_save.setCursor(Qt.PointingHandCursor)
         btn_save.clicked.connect(self._validate_and_accept)

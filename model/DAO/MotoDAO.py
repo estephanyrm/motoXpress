@@ -17,17 +17,13 @@ class MotoDAO:
             WHERE estado = 'disponible'
         """
         cursor: Cursor = conexion.execute(sql)
-        filas = cursor.fetchall()  # materializar antes de abrir nuevos cursores
+        filas = cursor.fetchall()  
 
         motos: List[MotoVO] = []
 
         for fila in filas:
             r = dict(fila)
             id_moto = r['id_moto']
-
-            # Carga eager dentro de la misma conexion abierta.
-            # El lazy loader (closure sobre conexion) falla porque la
-            # conexion ya esta cerrada al momento de llamar cargar_categorias().
             categorias = MotoCategoriaDAO.listar_categorias_de_moto(conexion, id_moto)
 
             moto = MotoVO(
@@ -109,25 +105,6 @@ class MotoDAO:
                           nuevo_estado: str) -> None:
         sql: str = "UPDATE Moto SET estado = ? WHERE id_moto = ?"
         conexion.execute(sql, (nuevo_estado, id_moto))
-
-
-    @staticmethod
-    def actualizar(conexion: ConexionSQLite3, moto: MotoVO) -> None:
-        sql: str = """
-            UPDATE Moto
-            SET vin=?, marca=?, modelo=?, anio=?, precio=?, color=?, estado=?
-            WHERE id_moto = ?
-        """
-        conexion.execute(sql, (
-            moto.vin,
-            moto.marca,
-            moto.modelo,
-            moto.anio,
-            moto.precio,
-            moto.color,
-            moto.estado,
-            moto.id_moto,
-        ))
 
 
     @staticmethod

@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página Nueva Venta
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox,
@@ -23,6 +20,8 @@ class NuevaVentaPage(QWidget):
     def __init__(self, controller, parent=None):
         super().__init__(parent)
         self._ctrl = controller
+        self._precios_moto = {}
+        self._precio_final_calculado = 0.0
         self._build()
 
     def _build(self):
@@ -78,6 +77,7 @@ class NuevaVentaPage(QWidget):
         # ── Moto (combo) ──
         self._moto_combo = QComboBox()
         self._moto_combo.setStyleSheet(STYLE_INPUT)
+        self._moto_combo.currentIndexChanged.connect(self._on_moto_changed)
         self._err_moto = make_label("", size=11, color=DANGER)
         self._err_moto.setVisible(False)
         self._add_form_row(form, "Moto disponible *", self._moto_combo, self._err_moto)
@@ -89,16 +89,17 @@ class NuevaVentaPage(QWidget):
         self._err_empleado.setVisible(False)
         self._add_form_row(form, "Empleado vendedor *", self._empleado_combo, self._err_empleado)
 
-        # ── Precio final ──
+        # ── Precio base (auto-llenado desde la moto) ──
         self._precio = QDoubleSpinBox()
         self._precio.setRange(0, 999_999_999)
         self._precio.setDecimals(0)
         self._precio.setPrefix("$ ")
         self._precio.setSingleStep(100_000)
         self._precio.setStyleSheet(STYLE_INPUT)
+        self._precio.valueChanged.connect(self._recalcular_financiacion)
         self._err_precio = make_label("", size=11, color=DANGER)
         self._err_precio.setVisible(False)
-        self._add_form_row(form, "Precio final *", self._precio, self._err_precio)
+        self._add_form_row(form, "Precio *", self._precio, self._err_precio)
 
         # ── Tipo de pago ──
         self._tipo_pago = QComboBox()
@@ -131,6 +132,7 @@ class NuevaVentaPage(QWidget):
         self._cuotas.setValue(12)
         self._cuotas.setSuffix(" meses")
         self._cuotas.setStyleSheet(STYLE_INPUT)
+        self._cuotas.valueChanged.connect(self._recalcular_financiacion)
 
         self._interes = QDoubleSpinBox()
         self._interes.setRange(0, 100)
@@ -138,9 +140,42 @@ class NuevaVentaPage(QWidget):
         self._interes.setSuffix(" %")
         self._interes.setValue(12.0)
         self._interes.setStyleSheet(STYLE_INPUT)
+        self._interes.valueChanged.connect(self._recalcular_financiacion)
 
         fl.addRow(make_label("Número de cuotas *", size=13, color=TEXT2), self._cuotas)
         fl.addRow(make_label("Interés anual *", size=13, color=TEXT2), self._interes)
+
+        # ── Separador ──
+        sep = QFrame()
+        sep.setFrameShape(QFrame.HLine)
+        sep.setStyleSheet("color: #BFDBFE;")
+        fl.addRow(sep)
+
+        # ── Precio final calculado ──
+        self._precio_final_label = QLabel("$ 0")
+        self._precio_final_label.setStyleSheet(f"""
+            QLabel {{
+                color: {ACCENT};
+                font-size: 15px;
+                font-weight: bold;
+                padding: 4px 0;
+            }}
+        """)
+        fl.addRow(make_label("Precio final con intereses:", size=13, color=TEXT2),
+                  self._precio_final_label)
+
+        # ── Monto por cuota (read-only) ──
+        self._monto_cuota_label = QLabel("$ 0  ×  12 cuotas")
+        self._monto_cuota_label.setStyleSheet(f"""
+            QLabel {{
+                color: {TEXT};
+                font-size: 13px;
+                font-weight: 600;
+                padding: 4px 0;
+            }}
+        """)
+        fl.addRow(make_label("Cuota mensual:", size=13, color=TEXT2),
+                  self._monto_cuota_label)
 
         self._fin_frame.setVisible(False)
         cl.addWidget(self._fin_frame)
@@ -157,11 +192,17 @@ class NuevaVentaPage(QWidget):
 
         btn_row.addStretch()
 
-        self._btn_deshacer = QPushButton("↩  Deshacer última venta")
+        self._btn_deshacer = QPushButton("↩  Deshacer")
         self._btn_deshacer.setStyleSheet(btn_danger())
         self._btn_deshacer.setCursor(Qt.PointingHandCursor)
         self._btn_deshacer.clicked.connect(self._deshacer)
         btn_row.addWidget(self._btn_deshacer)
+
+        self._btn_rehacer = QPushButton("↪  Rehacer")
+        self._btn_rehacer.setStyleSheet(btn_secondary())
+        self._btn_rehacer.setCursor(Qt.PointingHandCursor)
+        self._btn_rehacer.clicked.connect(self._rehacer)
+        btn_row.addWidget(self._btn_rehacer)
 
         btn_ok = QPushButton("  Registrar venta →")
         btn_ok.setStyleSheet(btn_primary())
@@ -173,8 +214,9 @@ class NuevaVentaPage(QWidget):
         layout.addWidget(card)
         layout.addStretch()
 
-        # Carga inicial de combos
+        # Carga inicial de combos y estado de botones
         self._cargar_datos()
+        self._actualizar_botones()
 
     def _add_form_row(self, form, label, widget, err_label):
         from PyQt5.QtWidgets import QWidget, QVBoxLayout
@@ -200,14 +242,16 @@ class NuevaVentaPage(QWidget):
         except Exception as e:
             show_error(self, f"Error al cargar clientes: {e}")
 
-        # Motos disponibles
+        # Motos disponibles — guardamos precio por id para auto-llenar
+        self._precios_moto = {}
         self._moto_combo.clear()
         self._moto_combo.addItem("— Seleccionar moto —", None)
         try:
             for m in self._ctrl.motos_disponibles():
-                label = f"[{m.id_moto}] {m.marca} {m.modelo} {m.anio}"
+                label = f"{m.marca} {m.modelo} {m.anio}"
                 if m.precio:
                     label += f" — ${m.precio:,.0f}"
+                    self._precios_moto[m.id_moto] = m.precio
                 self._moto_combo.addItem(label, m.id_moto)
         except Exception as e:
             show_error(self, f"Error al cargar motos: {e}")
@@ -224,8 +268,30 @@ class NuevaVentaPage(QWidget):
         except Exception as e:
             show_error(self, f"Error al cargar empleados: {e}")
 
+    def _on_moto_changed(self):
+        """Al seleccionar una moto, auto-llena el precio base."""
+        id_moto = self._moto_combo.currentData()
+        precio = self._precios_moto.get(id_moto, 0) if id_moto else 0
+        self._precio.setValue(precio)
+
+    def _recalcular_financiacion(self):
+        """Recalcula precio final con interés y monto de cuota en tiempo real."""
+        precio_base = self._precio.value()
+        interes     = self._interes.value()
+        cuotas      = self._cuotas.value()
+
+        self._precio_final_calculado = precio_base * (1 + interes / 100)
+        monto_cuota = self._precio_final_calculado / cuotas if cuotas > 0 else 0
+
+        self._precio_final_label.setText(f"$ {self._precio_final_calculado:,.0f}")
+        self._monto_cuota_label.setText(
+            f"$ {monto_cuota:,.0f}  ×  {cuotas} cuotas"
+        )
+
     def _toggle_financiacion(self, tipo):
         self._fin_frame.setVisible(tipo == "financiado")
+        if tipo == "financiado":
+            self._recalcular_financiacion()
 
     def _limpiar(self):
         self._precio.setValue(0)
@@ -274,9 +340,15 @@ class NuevaVentaPage(QWidget):
         if not self._validate():
             return
 
+        # Si es financiado usar el precio con intereses; si no, el precio base
+        if self._tipo_pago.currentText() == "financiado":
+            precio_a_guardar = self._precio_final_calculado if self._precio_final_calculado > 0 else self._precio.value()
+        else:
+            precio_a_guardar = self._precio.value()
+
         venta = VentaVO(
             id_venta=0,
-            precio_final=self._precio.value(),
+            precio_final=precio_a_guardar,
             tipo_pago=self._tipo_pago.currentText(),
             id_cliente=self._cliente_combo.currentData(),
             id_moto=self._moto_combo.currentData(),
@@ -295,9 +367,18 @@ class NuevaVentaPage(QWidget):
             id_v = self._ctrl.registrar_venta(venta, financiacion)
             show_ok(self, f"¡Venta #{id_v} registrada exitosamente!")
             self._limpiar()
+            self._actualizar_botones()
             self.venta_registrada.emit()
         except Exception as e:
             show_error(self, str(e))
+
+    def _actualizar_botones(self):
+        """Habilita o deshabilita Deshacer/Rehacer según el estado de las pilas."""
+        try:
+            self._btn_deshacer.setEnabled(self._ctrl.puede_deshacer_venta())
+            self._btn_rehacer.setEnabled(self._ctrl.puede_rehacer_venta())
+        except Exception:
+            pass
 
     def _deshacer(self):
         try:
@@ -305,12 +386,27 @@ class NuevaVentaPage(QWidget):
             if ok:
                 show_ok(self, "Última venta deshecha correctamente.")
                 self._cargar_datos()
+                self._actualizar_botones()
                 self.venta_registrada.emit()
             else:
                 show_error(self, "No hay ventas para deshacer.")
         except Exception as e:
             show_error(self, str(e))
 
+    def _rehacer(self):
+        try:
+            ok = self._ctrl.rehacer_venta()
+            if ok:
+                show_ok(self, "Venta rehecha correctamente.")
+                self._cargar_datos()
+                self._actualizar_botones()
+                self.venta_registrada.emit()
+            else:
+                show_error(self, "No hay ventas para rehacer.")
+        except Exception as e:
+            show_error(self, str(e))
+
     def refresh(self):
         """Recarga los combos (llamar al volver a esta página)."""
         self._cargar_datos()
+        self._actualizar_botones()

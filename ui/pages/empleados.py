@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página de Empleados
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QPushButton,

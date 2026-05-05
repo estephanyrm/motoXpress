@@ -24,18 +24,16 @@ class RegistrarVentaCommand:
         self._financiacion_id: Optional[int] = None
 
     def execute(self, conn: ConexionSQLite3) -> None:
-        # Guarda estado previo de la moto (necesario para undo)
+        # 1. Guarda estado previo de la moto (necesario para undo)
         moto = MotoDAO.obtener_por_id(conn, self._venta.id_moto)
         if moto is None:
-            raise ValueError("Moto no encontrada")
-
+            raise ValueError("Moto no encontrada.")
         self._moto_estado_anterior = moto.estado
 
-        # Delegamos la inserción completa al DAO
+        # 2. VentaDAO.insertar maneja todo: INSERT Venta + INSERT Financiacion + UPDATE Moto
         self._venta_id = VentaDAO.insertar(conn, self._venta)
-        self._venta.id_venta = self._venta_id
 
-        # Guarda el ID de financiación creada, para poder eliminarla en undo
+        # 3. Guarda el id de la financiacion creada para poder eliminarla en undo
         if self._venta.financiacion:
             fin = FinanciacionDAO.obtener_por_venta(conn, self._venta_id)
             if fin:

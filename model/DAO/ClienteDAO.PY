@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import datetime
 
 from peewee import Model, AutoField, CharField, DateTimeField, DoesNotExist
 
@@ -63,5 +64,6 @@ class ClienteDAO:
                 cedula=cliente.cedula,
                 telefono=cliente.telefono,
                 email=cliente.email,
+                fecha_registro=datetime.now(),
             )
             return registro.id_cliente

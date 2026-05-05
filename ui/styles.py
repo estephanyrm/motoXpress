@@ -1,35 +1,27 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Estilos globales (v3 — Rediseño profesional)
-# ─────────────────────────────────────────────
-
-SELECTED  = "#C4D8CC"
-ERROR_BG  = "#FEE2E2"
-ERROR_BD  = "#FCA5A5"   
-
 WHITE      = "#FFFFFF"
 OFF_WHITE  = "#F7F8FA"
 PANEL      = "#EEF0F5"
-BORDER     = "#CACACE"
-BORDER2    = "#B0B0B8"
+BORDER     = "#E2E6EF"
+BORDER2    = "#C9CEDB"
 TEXT       = "#111827"
-TEXT2      = "#374151"
-TEXT3      = "#6B7280"
+TEXT2      = "#4B5563"
+TEXT3      = "#9CA3AF"
 
-ACCENT     = "#1A3A2A"
-ACCENT_L   = "#254D38"
+ACCENT     = "#2563EB"
+ACCENT_L   = "#EFF6FF"
 ACCENT_H   = "#1D4ED8"
 ACCENT_XL  = "#DBEAFE"
 
-SUCCESS    = "#145C30"
+SUCCESS    = "#059669"
 SUCCESS_L  = "#ECFDF5"
-DANGER     = "#991B1B"
+DANGER     = "#DC2626"
 DANGER_L   = "#FEF2F2"
-WARNING    = "#92400E"
+WARNING    = "#D97706"
 WARNING_L  = "#FFFBEB"
 
-SIDEBAR_BG  = "#1A3A2A"
-SIDEBAR_T   = "#3D6B52"
-SIDEBAR_A   = "#FFFFFF" 
+SIDEBAR_BG  = "#111827"
+SIDEBAR_T   = "#9CA3AF"
+SIDEBAR_A   = "#FFFFFF"
 SIDEBAR_HV  = "#1F2937"
 SIDEBAR_SEL = "#1E3A5F"
 SIDEBAR_ACC = "#3B82F6"

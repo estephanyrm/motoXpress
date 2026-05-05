@@ -1,12 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página de Motos (v3)
-#  Cambios clave:
-#  1. Filtros corregidos: búsqueda + categoría combinadas sin perder estado
-#  2. Carga lazy de categorías solo al inicio (_reload), no en cada filtro
-#  3. Contador de resultados visible
-#  4. Botón para limpiar filtros
-#  5. Diálogo de registro mejorado con validaciones
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QFrame,
@@ -45,7 +36,7 @@ class MotosPage(QWidget):
 
         self._build()
 
-    # ── Construcción de la UI ─────────────────────────────────────────────
+    # Construcción de la UI
     def _build(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 28, 32, 28)
@@ -119,7 +110,7 @@ class MotosPage(QWidget):
 
         self._reload()
 
-    # ── Carga de datos ────────────────────────────────────────────────────
+    # Carga de datos
     def refresh(self):
         """Punto de entrada cuando el usuario navega a esta página."""
         self._reload()
@@ -165,7 +156,7 @@ class MotosPage(QWidget):
             self._combo_cat.setCurrentIndex(0)
         self._combo_cat.blockSignals(False)
 
-    # ── Lógica de filtrado ────────────────────────────────────────────────
+    #  Lógica de filtrado 
     def _apply_filters(self):
         """
         Filtra _all_motos en memoria combinando texto de búsqueda y
@@ -209,7 +200,7 @@ class MotosPage(QWidget):
         self._btn_clear.setVisible(False)
         self._populate(self._all_motos)
 
-    # ── Renderizado de tabla ──────────────────────────────────────────────
+    #  Renderizado de tabla 
     def _populate(self, motos):
         """Llena la tabla con la lista filtrada de motos."""
         color_map = {
@@ -262,7 +253,7 @@ class MotosPage(QWidget):
                 f"Mostrando {shown} de {total} motos"
             )
 
-    # ── Diálogo de registro ───────────────────────────────────────────────
+    #  Diálogo de registro 
     def _form_registrar(self):
         try:
             cats = self._ctrl.listar_categorias()
@@ -274,10 +265,7 @@ class MotosPage(QWidget):
         if dialog.exec_() == QDialog.Accepted:
             self._reload()
 
-
-# ─────────────────────────────────────────────
 #  Diálogo: Registrar moto
-# ─────────────────────────────────────────────
 class _MotoDialog(QDialog):
 
     def __init__(self, parent, controller, categorias):
@@ -411,7 +399,7 @@ class _MotoDialog(QDialog):
         btn_row.addWidget(btn_save)
         layout.addLayout(btn_row)
 
-    # ── Validación ────────────────────────────────────────────────────────
+    # Validación 
     def _validate(self):
         ok = True
 

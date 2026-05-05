@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Dashboard
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QFrame, QScrollArea

@@ -42,28 +42,19 @@ class CategoriaDAO:
     @staticmethod
     def insertar(conexion: ConexionSQLite3,
                  nombre: str, descripcion: str = None) -> int:
-        """Inserta una nueva categoría y retorna su id."""
         sql = "INSERT INTO Categoria (nombre, descripcion) VALUES (?, ?)"
         cursor = conexion.execute(sql, (nombre, descripcion))
         return cursor.lastrowid
 
     @staticmethod
     def actualizar(conexion: ConexionSQLite3,
-                   id_categoria: int, nombre: str,
+                   id_categoria: int,
+                   nombre: str,
                    descripcion: str = None) -> None:
-        """Actualiza nombre y descripción de una categoría existente."""
         sql = "UPDATE Categoria SET nombre = ?, descripcion = ? WHERE id_categoria = ?"
         conexion.execute(sql, (nombre, descripcion, id_categoria))
 
     @staticmethod
     def eliminar(conexion: ConexionSQLite3, id_categoria: int) -> None:
-        """
-        Elimina la categoría y su relación en MotoCategoria (cascada manual).
-        SQLite necesita esta eliminación explícita si no hay ON DELETE CASCADE.
-        """
-        conexion.execute(
-            "DELETE FROM MotoCategoria WHERE id_categoria = ?", (id_categoria,)
-        )
-        conexion.execute(
-            "DELETE FROM Categoria WHERE id_categoria = ?", (id_categoria,)
-        )
+        sql = "DELETE FROM Categoria WHERE id_categoria = ?"
+        conexion.execute(sql, (id_categoria,))

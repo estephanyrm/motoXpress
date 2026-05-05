@@ -12,18 +12,9 @@ from model.DAO.FinanciacionDAO import FinanciacionDAO
 
 
 class VentaDAO:
-    """
-    DAO de Venta — solo persistencia, sin reglas de negocio.
-
-    Estrategias de carga usadas:
-      - obtener_por_id   : eager loading completo (cliente, moto, empleado, financiación)
-      - listar_por_*     : moto eager (necesaria para mostrar info) + financiación lazy
-    """
-
     @staticmethod
     def listar_por_cliente(conexion: ConexionSQLite3,
                            id_cliente: int) -> List[VentaVO]:
-        # Bug fix: columnas explícitas con alias para evitar colisión entre v.* y m.*
         sql: str = """
             SELECT v.id_venta,
                    v.fecha_venta,
@@ -80,10 +71,6 @@ class VentaDAO:
     def listar_por_periodo(conexion: ConexionSQLite3,
                            fecha_inicio: str,
                            fecha_fin: str) -> List[VentaVO]:
-        """
-        Bug fix: método faltante. Devuelve ventas en el rango [fecha_inicio, fecha_fin].
-        Carga moto eager (necesaria para reportes) y financiación lazy.
-        """
         sql: str = """
             SELECT v.id_venta,
                    v.fecha_venta,
@@ -170,10 +157,6 @@ class VentaDAO:
     @staticmethod
     def insertar(conexion: ConexionSQLite3,
                  venta: VentaVO) -> int:
-        """
-        Persiste la venta y, si lleva financiación adjunta, también la persiste.
-        No realiza validaciones de negocio (esa responsabilidad es de VentaService).
-        """
         sql: str = """
             INSERT INTO Venta (fecha_venta, precio_final, tipo_pago,
                                id_cliente, id_moto, id_empleado)
@@ -193,8 +176,6 @@ class VentaDAO:
 
         if venta.financiacion:
             venta.financiacion.id_venta = id_venta
-            if venta.financiacion.monto_cuota is None:
-                venta.financiacion.calcular_monto_cuota(venta.precio_final)
             FinanciacionDAO.insertar(conexion, venta.financiacion)
 
         MotoDAO.actualizar_estado(conexion, venta.id_moto, 'vendida')

@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Sidebar (v3)
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import Qt, pyqtSignal
 

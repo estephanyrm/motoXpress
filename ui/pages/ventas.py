@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página Historial de Ventas
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QPushButton,

@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Ventana principal y punto de entrada
-# ─────────────────────────────────────────────
 import sys
 
 from PyQt5.QtWidgets import (

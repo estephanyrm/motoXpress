@@ -37,6 +37,12 @@ class UndoRedoManager:
         self._guardar()
         return cmd
 
+    def tiene_undo(self) -> bool:
+        return len(self.undo_stack) > 0
+
+    def tiene_redo(self) -> bool:
+        return len(self.redo_stack) > 0
+
     # Persistencia
     def _cmd_to_dict(self, cmd) -> dict:
         v = cmd._venta

@@ -1,6 +1,3 @@
-# ─────────────────────────────────────────────
-#  MotoXpress — Página de Clientes
-# ─────────────────────────────────────────────
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QPushButton,
@@ -117,9 +114,7 @@ class ClientesPage(QWidget):
             self._reload()
 
 
-# ─────────────────────────────────────────────
 #  Diálogo: Registrar cliente
-# ─────────────────────────────────────────────
 class _ClienteDialog(QDialog):
     def __init__(self, parent, controller):
         super().__init__(parent)
