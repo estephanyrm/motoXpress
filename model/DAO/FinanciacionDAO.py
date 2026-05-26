@@ -1,53 +1,74 @@
 from typing import Optional
-from sqlite3 import Cursor
 
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
 from model.VO.FinanciacionVO import FinanciacionVO
 
 
+def _a_vo(doc) -> Optional[FinanciacionVO]:
+
+    if doc is None:
+        return None
+
+    return FinanciacionVO(
+        id_financiacion=doc.get("id_financiacion"),
+        cuotas=doc.get("cuotas"),
+        interes=doc.get("interes"),
+        monto_cuota=doc.get("monto_cuota"),
+        id_venta=doc.get("id_venta")
+    )
+
+
 class FinanciacionDAO:
+
     @staticmethod
-    def obtener_por_venta(conexion: ConexionSQLite3,
-                          id_venta: int) -> Optional[FinanciacionVO]:
+    def obtener_por_venta(
+            id_venta: int) -> Optional[FinanciacionVO]:
 
-        sql: str = """
-            SELECT id_financiacion, cuotas, interes, monto_cuota, id_venta
-            FROM   Financiacion
-            WHERE  id_venta = ?
-        """
-        cursor: Cursor = conexion.execute(sql, (id_venta,))
-        fila = cursor.fetchone()
-
-        if fila is None:
-            return None
-
-        r = dict(fila)
-        return FinanciacionVO(
-            id_financiacion=r['id_financiacion'],
-            cuotas=r['cuotas'],
-            interes=r['interes'],
-            monto_cuota=r['monto_cuota'],
-            id_venta=r['id_venta']
+        coleccion = ConexionMongoDB.get_collection(
+            "Financiacion"
         )
 
-    @staticmethod
-    def insertar(conexion: ConexionSQLite3,
-                 financiacion: FinanciacionVO) -> int:
+        doc = coleccion.find_one({
+            "id_venta": id_venta
+        })
 
-        sql: str = """
-            INSERT INTO Financiacion (cuotas, interes, monto_cuota, id_venta)
-            VALUES (?, ?, ?, ?)
-        """
-        cursor: Cursor = conexion.cursor()
-        cursor.execute(sql, (
-            financiacion.cuotas,
-            financiacion.interes,
-            financiacion.monto_cuota,
-            financiacion.id_venta
-        ))
-        return cursor.lastrowid
-    
+        return _a_vo(doc)
+
     @staticmethod
-    def eliminar(conexion: ConexionSQLite3, id_financiacion: int) -> None:
-        """Elimina una financiación por su PK. Usado por el undo del Command."""
-        conexion.execute("DELETE FROM Financiacion WHERE id_financiacion = ?", (id_financiacion,))
+    def insertar(
+            financiacion: FinanciacionVO) -> int:
+
+        coleccion = ConexionMongoDB.get_collection(
+            "Financiacion"
+        )
+
+        ultimo = coleccion.find_one(
+            sort=[("id_financiacion", -1)]
+        )
+
+        nuevo_id = 1
+
+        if ultimo:
+            nuevo_id = ultimo["id_financiacion"] + 1
+
+        coleccion.insert_one({
+            "id_financiacion": nuevo_id,
+            "cuotas": financiacion.cuotas,
+            "interes": financiacion.interes,
+            "monto_cuota": financiacion.monto_cuota,
+            "id_venta": financiacion.id_venta
+        })
+
+        return nuevo_id
+
+    @staticmethod
+    def eliminar(
+            id_financiacion: int) -> None:
+
+        coleccion = ConexionMongoDB.get_collection(
+            "Financiacion"
+        )
+
+        coleccion.delete_one({
+            "id_financiacion": id_financiacion
+        })

@@ -1,133 +1,126 @@
 from typing import Optional, List
-from sqlite3 import Cursor
 
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
 from model.VO.MotoVO import MotoVO
 from model.VO.CategoriaVO import CategoriaVO
-from model.DAO.MotoCategoriaDAO import MotoCategoriaDAO
+
+
+def _a_vo(doc) -> MotoVO:
+
+    categorias = [
+        CategoriaVO(
+            id_categoria=c["id_categoria"],
+            nombre=c["nombre"],
+            descripcion=c.get("descripcion")
+        )
+        for c in doc.get("categorias", [])
+    ]
+
+    return MotoVO(
+        id_moto=doc["id_moto"],
+        vin=doc["vin"],
+        marca=doc["marca"],
+        modelo=doc["modelo"],
+        anio=doc["anio"],
+        precio=doc["precio"],
+        color=doc["color"],
+        estado=doc["estado"],
+        categorias=categorias
+    )
 
 
 class MotoDAO:
-    # Carga eager, necesita categorias para mostrar en la tabla de motos
+
     @staticmethod
-    def listar_disponibles(conexion: ConexionSQLite3) -> List[MotoVO]:
-        sql: str = """
-            SELECT id_moto, vin, marca, modelo, anio,
-                   precio, color, estado
-            FROM Moto
-            WHERE estado = 'disponible'
-        """
-        cursor: Cursor = conexion.execute(sql)
-        filas = cursor.fetchall()  
+    def listar_disponibles() -> List[MotoVO]:
 
-        motos: List[MotoVO] = []
+        coleccion = ConexionMongoDB.get_collection("Moto")
 
-        for fila in filas:
-            r = dict(fila)
-            id_moto = r['id_moto']
-            categorias = MotoCategoriaDAO.listar_categorias_de_moto(conexion, id_moto)
+        documentos = coleccion.find({
+            "estado": "disponible"
+        })
 
-            moto = MotoVO(
-                id_moto=id_moto,
-                vin=r['vin'],
-                marca=r['marca'],
-                modelo=r['modelo'],
-                anio=r['anio'],
-                precio=r['precio'],
-                color=r['color'],
-                estado=r['estado'],
-                categorias=categorias,
-            )
+        return [_a_vo(doc) for doc in documentos]
 
-            motos.append(moto)
-
-        return motos
-
-    # Carga eager porque se necesita mostrar las categorías de la moto en la vista de detalle
     @staticmethod
-    def obtener_por_id(conexion: ConexionSQLite3,
-                       id_moto: int) -> Optional[MotoVO]:
+    def obtener_por_id(
+            id_moto: int) -> Optional[MotoVO]:
 
-        sql: str = """
-            SELECT id_moto, vin, marca, modelo, anio,
-                   precio, color, estado
-            FROM Moto
-            WHERE id_moto = ?
-        """
-        cursor: Cursor = conexion.execute(sql, (id_moto,))
-        fila = cursor.fetchone()
+        coleccion = ConexionMongoDB.get_collection("Moto")
 
-        if fila is None:
+        doc = coleccion.find_one({
+            "id_moto": id_moto
+        })
+
+        if doc is None:
             return None
 
-        r = dict(fila)
+        return _a_vo(doc)
 
-        categorias: List[CategoriaVO] = MotoCategoriaDAO.listar_categorias_de_moto(conexion, id_moto)
+    @staticmethod
+    def insertar(moto: MotoVO) -> int:
 
-        moto = MotoVO(
-            id_moto=r['id_moto'],
-            vin=r['vin'],
-            marca=r['marca'],
-            modelo=r['modelo'],
-            anio=r['anio'],
-            precio=r['precio'],
-            color=r['color'],
-            estado=r['estado']
+        coleccion = ConexionMongoDB.get_collection("Moto")
+
+        ultimo = coleccion.find_one(
+            sort=[("id_moto", -1)]
         )
-        moto.categorias = categorias
 
-        return moto
+        nuevo_id = 1
 
+        if ultimo:
+            nuevo_id = ultimo["id_moto"] + 1
 
-    @staticmethod
-    def insertar(conexion: ConexionSQLite3,
-                 moto: MotoVO) -> int:
+        categorias = []
 
-        sql: str = """
-            INSERT INTO Moto (vin, marca, modelo, anio, precio, color, estado)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """
-        cursor: Cursor = conexion.cursor()
-        cursor.execute(sql, (
-            moto.vin,
-            moto.marca,
-            moto.modelo,
-            moto.anio,
-            moto.precio,
-            moto.color,
-            moto.estado
-        ))
-        return cursor.lastrowid
+        for categoria in moto.categorias:
+            categorias.append({
+                "id_categoria": categoria.id_categoria,
+                "nombre": categoria.nombre,
+                "descripcion": categoria.descripcion
+            })
 
+        coleccion.insert_one({
+            "id_moto": nuevo_id,
+            "vin": moto.vin,
+            "marca": moto.marca,
+            "modelo": moto.modelo,
+            "anio": moto.anio,
+            "precio": moto.precio,
+            "color": moto.color,
+            "estado": moto.estado,
+            "categorias": categorias
+        })
 
-    @staticmethod
-    def actualizar_estado(conexion: ConexionSQLite3,
-                          id_moto: int,
-                          nuevo_estado: str) -> None:
-        sql: str = "UPDATE Moto SET estado = ? WHERE id_moto = ?"
-        conexion.execute(sql, (nuevo_estado, id_moto))
-
+        return nuevo_id
 
     @staticmethod
-    def buscar_por_vin(conexion: ConexionSQLite3, vin: str) -> Optional[MotoVO]:
-        sql: str = """
-            SELECT id_moto, vin, marca, modelo, anio, precio, color, estado
-            FROM Moto WHERE vin = ?
-        """
-        fila = conexion.execute(sql, (vin,)).fetchone()
+    def actualizar_estado(
+            id_moto: int,
+            nuevo_estado: str) -> None:
 
-        if fila is None:
+        coleccion = ConexionMongoDB.get_collection("Moto")
+
+        coleccion.update_one(
+            {"id_moto": id_moto},
+            {
+                "$set": {
+                    "estado": nuevo_estado
+                }
+            }
+        )
+
+    @staticmethod
+    def buscar_por_vin(
+            vin: str) -> Optional[MotoVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Moto")
+
+        doc = coleccion.find_one({
+            "vin": vin
+        })
+
+        if doc is None:
             return None
 
-        r = dict(fila)
-
-        return MotoVO(
-            id_moto=r['id_moto'],
-            vin=r['vin'],
-            marca=r['marca'],
-            modelo=r['modelo'],
-            anio=r['anio'],
-            precio=r['precio'],
-            color=r['color'],
-            estado=r['estado'],
-        )
+        return _a_vo(doc)

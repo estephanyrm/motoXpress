@@ -1,9 +1,9 @@
 from typing import Optional, List
-from sqlite3 import Cursor
+from datetime import datetime
 
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
+
 from model.VO.VentaVO import VentaVO
-from model.VO.MotoVO import MotoVO
 
 from model.DAO.ClienteDAO import ClienteDAO
 from model.DAO.MotoDAO import MotoDAO
@@ -12,180 +12,196 @@ from model.DAO.FinanciacionDAO import FinanciacionDAO
 
 
 class VentaDAO:
-    # Carga eager de moto y venta, carga lazy de financiacion
+
     @staticmethod
-    def listar_por_cliente(conexion: ConexionSQLite3,
-                           id_cliente: int) -> List[VentaVO]:
-        sql: str = """
-            SELECT v.id_venta,
-                   v.fecha_venta,
-                   v.precio_final,
-                   v.tipo_pago,
-                   v.id_cliente,
-                   v.id_moto      AS v_id_moto,
-                   v.id_empleado,
-                   m.id_moto      AS m_id_moto,
-                   m.vin, m.marca, m.modelo,
-                   m.anio, m.precio, m.color, m.estado
-            FROM   Venta v
-            JOIN   Moto  m ON v.id_moto = m.id_moto
-            WHERE  v.id_cliente = ?
-        """
-        cursor: Cursor = conexion.execute(sql, (id_cliente,))
-        ventas: List[VentaVO] = []
+    def listar_por_cliente(
+            id_cliente: int) -> List[VentaVO]:
 
-        for fila in cursor:
-            r = dict(fila)
+        coleccion = ConexionMongoDB.get_collection("Venta")
 
-            moto = MotoVO(
-                id_moto=r['m_id_moto'],
-                vin=r['vin'],
-                marca=r['marca'],
-                modelo=r['modelo'],
-                anio=r['anio'],
-                precio=r['precio'],
-                color=r['color'],
-                estado=r['estado'],
+        ventas = []
+
+        for doc in coleccion.find({"id_cliente": id_cliente}):
+
+            moto = MotoDAO.obtener_por_id(
+                doc["id_moto"]
             )
 
             venta = VentaVO(
-                id_venta=r['id_venta'],
-                fecha_venta=r['fecha_venta'],
-                precio_final=r['precio_final'],
-                tipo_pago=r['tipo_pago'],
-                id_cliente=r['id_cliente'],
-                id_moto=r['v_id_moto'],
-                id_empleado=r['id_empleado'],
+                id_venta=doc["id_venta"],
+                fecha_venta=doc["fecha_venta"],
+                precio_final=doc["precio_final"],
+                tipo_pago=doc["tipo_pago"],
+                id_cliente=doc["id_cliente"],
+                id_moto=doc["id_moto"],
+                id_empleado=doc["id_empleado"]
             )
+
             venta._moto_cache = moto
 
-            id_v = r['id_venta']
+            id_v = doc["id_venta"]
+
             venta._financiacion_loader = (
-                lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conexion, id_v)
+                lambda id_v=id_v:
+                FinanciacionDAO.obtener_por_venta(id_v)
             )
 
             ventas.append(venta)
 
         return ventas
 
-    # Carga Eager de Moto y Venta para optimizar el listado por fechas.
-    # Carga Lazy de Financiación para evitar consultas innecesarias en reportes masivos.
     @staticmethod
-    def listar_por_periodo(conexion: ConexionSQLite3,
-                           fecha_inicio: str,
-                           fecha_fin: str) -> List[VentaVO]:
-        sql: str = """
-            SELECT v.id_venta,
-                   v.fecha_venta,
-                   v.precio_final,
-                   v.tipo_pago,
-                   v.id_cliente,
-                   v.id_moto      AS v_id_moto,
-                   v.id_empleado,
-                   m.id_moto      AS m_id_moto,
-                   m.vin, m.marca, m.modelo,
-                   m.anio, m.precio, m.color, m.estado
-            FROM   Venta v
-            JOIN   Moto  m ON v.id_moto = m.id_moto
-            WHERE  v.fecha_venta BETWEEN ? AND ?
-            ORDER  BY v.fecha_venta DESC
-        """
-        cursor: Cursor = conexion.execute(sql, (fecha_inicio, fecha_fin))
-        ventas: List[VentaVO] = []
+    def listar_por_periodo(
+            fecha_inicio: str,
+            fecha_fin: str) -> List[VentaVO]:
 
-        for fila in cursor:
-            r = dict(fila)
+        coleccion = ConexionMongoDB.get_collection("Venta")
 
-            moto = MotoVO(
-                id_moto=r['m_id_moto'],
-                vin=r['vin'],
-                marca=r['marca'],
-                modelo=r['modelo'],
-                anio=r['anio'],
-                precio=r['precio'],
-                color=r['color'],
-                estado=r['estado'],
+        ventas = []
+
+        consulta = {
+            "fecha_venta": {
+                "$gte": fecha_inicio,
+                "$lte": fecha_fin
+            }
+        }
+
+        documentos = coleccion.find(
+            consulta
+        ).sort("fecha_venta", -1)
+
+        for doc in documentos:
+
+            moto = MotoDAO.obtener_por_id(
+                doc["id_moto"]
             )
 
             venta = VentaVO(
-                id_venta=r['id_venta'],
-                fecha_venta=r['fecha_venta'],
-                precio_final=r['precio_final'],
-                tipo_pago=r['tipo_pago'],
-                id_cliente=r['id_cliente'],
-                id_moto=r['v_id_moto'],
-                id_empleado=r['id_empleado'],
+                id_venta=doc["id_venta"],
+                fecha_venta=doc["fecha_venta"],
+                precio_final=doc["precio_final"],
+                tipo_pago=doc["tipo_pago"],
+                id_cliente=doc["id_cliente"],
+                id_moto=doc["id_moto"],
+                id_empleado=doc["id_empleado"]
             )
+
             venta._moto_cache = moto
 
-            id_v = r['id_venta']
+            id_v = doc["id_venta"]
+
             venta._financiacion_loader = (
-                lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conexion, id_v)
+                lambda id_v=id_v:
+                FinanciacionDAO.obtener_por_venta(id_v)
             )
 
             ventas.append(venta)
 
         return ventas
 
-    # Carga Eager completa para obtener toda la información de una venta individual, optimizando consultas posteriores a través de caching interno.
     @staticmethod
-    def obtener_por_id(conexion: ConexionSQLite3,
-                       id_venta: int) -> Optional[VentaVO]:
-        sql: str = "SELECT * FROM Venta WHERE id_venta = ?"
-        cursor: Cursor = conexion.execute(sql, (id_venta,))
-        fila = cursor.fetchone()
+    def obtener_por_id(
+            id_venta: int) -> Optional[VentaVO]:
 
-        if fila is None:
-            return None
-
-        r = dict(fila)
-
-        venta = VentaVO(
-            id_venta=r['id_venta'],
-            fecha_venta=r['fecha_venta'],
-            precio_final=r['precio_final'],
-            tipo_pago=r['tipo_pago'],
-            id_cliente=r['id_cliente'],
-            id_moto=r['id_moto'],
-            id_empleado=r['id_empleado'],
+        coleccion = ConexionMongoDB.get_collection(
+            "Venta"
         )
 
-        # Eager loading completo para el detalle individual
-        venta._cliente_cache  = ClienteDAO.obtener_por_id(conexion, r['id_cliente'])
-        venta._moto_cache     = MotoDAO.obtener_por_id(conexion, r['id_moto'])
-        venta._empleado_cache = EmpleadoDAO.obtener_por_id(conexion, r['id_empleado'])
-        venta.financiacion    = FinanciacionDAO.obtener_por_venta(conexion, r['id_venta'])
+        doc = coleccion.find_one({
+            "id_venta": id_venta
+        })
+
+        if doc is None:
+            return None
+
+        venta = VentaVO(
+            id_venta=doc["id_venta"],
+            fecha_venta=doc["fecha_venta"],
+            precio_final=doc["precio_final"],
+            tipo_pago=doc["tipo_pago"],
+            id_cliente=doc["id_cliente"],
+            id_moto=doc["id_moto"],
+            id_empleado=doc["id_empleado"]
+        )
+
+        venta._cliente_cache = (
+            ClienteDAO.obtener_por_id(
+                doc["id_cliente"]
+            )
+        )
+
+        venta._moto_cache = (
+            MotoDAO.obtener_por_id(
+                doc["id_moto"]
+            )
+        )
+
+        venta._empleado_cache = (
+            EmpleadoDAO.obtener_por_id(
+                doc["id_empleado"]
+            )
+        )
+
+        venta.financiacion = (
+            FinanciacionDAO.obtener_por_venta(
+                doc["id_venta"]
+            )
+        )
 
         return venta
 
     @staticmethod
-    def insertar(conexion: ConexionSQLite3,
-                 venta: VentaVO) -> int:
-        sql: str = """
-            INSERT INTO Venta (fecha_venta, precio_final, tipo_pago,
-                               id_cliente, id_moto, id_empleado)
-            VALUES (date('now'), ?, ?, ?, ?, ?)
-        """
-        cursor: Cursor = conexion.cursor()
-        cursor.execute(sql, (
-            venta.precio_final,
-            venta.tipo_pago,
-            venta.id_cliente,
-            venta.id_moto,
-            venta.id_empleado,
-        ))
+    def insertar(
+            venta: VentaVO) -> int:
 
-        id_venta = cursor.lastrowid
-        venta.id_venta = id_venta
+        coleccion = ConexionMongoDB.get_collection(
+            "Venta"
+        )
+
+        ultimo = coleccion.find_one(
+            sort=[("id_venta", -1)]
+        )
+
+        nuevo_id = 1
+
+        if ultimo:
+            nuevo_id = ultimo["id_venta"] + 1
+
+        coleccion.insert_one({
+            "id_venta": nuevo_id,
+            "fecha_venta": datetime.now().strftime("%Y-%m-%d"),
+            "precio_final": venta.precio_final,
+            "tipo_pago": venta.tipo_pago,
+            "id_cliente": venta.id_cliente,
+            "id_moto": venta.id_moto,
+            "id_empleado": venta.id_empleado
+        })
+
+        venta.id_venta = nuevo_id
 
         if venta.financiacion:
-            venta.financiacion.id_venta = id_venta
-            FinanciacionDAO.insertar(conexion, venta.financiacion)
 
-        MotoDAO.actualizar_estado(conexion, venta.id_moto, 'vendida')
+            venta.financiacion.id_venta = nuevo_id
 
-        return id_venta
+            FinanciacionDAO.insertar(
+                venta.financiacion
+            )
+
+        MotoDAO.actualizar_estado(
+            venta.id_moto,
+            "vendida"
+        )
+
+        return nuevo_id
 
     @staticmethod
-    def eliminar(conexion: ConexionSQLite3, id_venta: int) -> None:
-        conexion.execute("DELETE FROM Venta WHERE id_venta = ?", (id_venta,))
+    def eliminar(
+            id_venta: int) -> None:
+
+        coleccion = ConexionMongoDB.get_collection(
+            "Venta"
+        )
+
+        coleccion.delete_one({
+            "id_venta": id_venta
+        })

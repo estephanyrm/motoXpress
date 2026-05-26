@@ -1,60 +1,92 @@
 from typing import Optional, List
 
-from peewee import Model, AutoField, CharField, TextField, DoesNotExist
-
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
 from model.VO.CategoriaVO import CategoriaVO
 
 
-class _CategoriaModel(Model):
-    id_categoria = AutoField(column_name='id_categoria')
-    nombre       = CharField(column_name='nombre')
-    descripcion  = TextField(column_name='descripcion', null=True)
+def _a_vo(doc) -> Optional[CategoriaVO]:
 
-    class Meta:
-        table_name = 'Categoria'
+    if doc is None:
+        return None
 
-
-def _a_vo(fila: _CategoriaModel) -> CategoriaVO:
     return CategoriaVO(
-        id_categoria=fila.id_categoria,
-        nombre=fila.nombre,
-        descripcion=fila.descripcion,
+        id_categoria=doc.get("id_categoria"),
+        nombre=doc.get("nombre"),
+        descripcion=doc.get("descripcion")
     )
 
-# Usamos Peewee: Categoria es una tabla plana sin joins.
+
 class CategoriaDAO:
 
     @staticmethod
-    def listar_todas(conexion: ConexionSQLite3) -> List[CategoriaVO]:
-        with _CategoriaModel.bind_ctx(conexion.db_peewee):
-            return [_a_vo(f) for f in _CategoriaModel.select()]
+    def listar_todas() -> List[CategoriaVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Categoria")
+
+        return [
+            _a_vo(doc)
+            for doc in coleccion.find()
+        ]
 
     @staticmethod
-    def obtener_por_id(conexion: ConexionSQLite3,
-                       id_categoria: int) -> Optional[CategoriaVO]:
-        try:
-            with _CategoriaModel.bind_ctx(conexion.db_peewee):
-                return _a_vo(_CategoriaModel.get_by_id(id_categoria))
-        except DoesNotExist:
-            return None 
+    def obtener_por_id(
+            id_categoria: int) -> Optional[CategoriaVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Categoria")
+
+        doc = coleccion.find_one({
+            "id_categoria": id_categoria
+        })
+
+        return _a_vo(doc)
 
     @staticmethod
-    def insertar(conexion: ConexionSQLite3,
-                 nombre: str, descripcion: str = None) -> int:
-        sql = "INSERT INTO Categoria (nombre, descripcion) VALUES (?, ?)"
-        cursor = conexion.execute(sql, (nombre, descripcion))
-        return cursor.lastrowid
+    def insertar(
+            nombre: str,
+            descripcion: str = None) -> int:
+
+        coleccion = ConexionMongoDB.get_collection("Categoria")
+
+        ultimo = coleccion.find_one(
+            sort=[("id_categoria", -1)]
+        )
+
+        nuevo_id = 1
+
+        if ultimo:
+            nuevo_id = ultimo["id_categoria"] + 1
+
+        coleccion.insert_one({
+            "id_categoria": nuevo_id,
+            "nombre": nombre,
+            "descripcion": descripcion
+        })
+
+        return nuevo_id
 
     @staticmethod
-    def actualizar(conexion: ConexionSQLite3,
-                   id_categoria: int,
-                   nombre: str,
-                   descripcion: str = None) -> None:
-        sql = "UPDATE Categoria SET nombre = ?, descripcion = ? WHERE id_categoria = ?"
-        conexion.execute(sql, (nombre, descripcion, id_categoria))
+    def actualizar(
+            id_categoria: int,
+            nombre: str,
+            descripcion: str = None) -> None:
+
+        coleccion = ConexionMongoDB.get_collection("Categoria")
+
+        coleccion.update_one(
+            {"id_categoria": id_categoria},
+            {
+                "$set": {
+                    "nombre": nombre,
+                    "descripcion": descripcion
+                }
+            }
+        )
 
     @staticmethod
-    def eliminar(conexion: ConexionSQLite3, id_categoria: int) -> None:
-        sql = "DELETE FROM Categoria WHERE id_categoria = ?"
-        conexion.execute(sql, (id_categoria,))
+    def eliminar(id_categoria: int) -> None:
+
+        coleccion = ConexionMongoDB.get_collection("Categoria")
+
+        coleccion.delete_one({
+            "id_categoria": id_categoria
+        })

@@ -1,69 +1,81 @@
 from typing import Optional, List
 from datetime import datetime
 
-from peewee import Model, AutoField, CharField, DateTimeField, DoesNotExist
-
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
 from model.VO.ClienteVO import ClienteVO
 
-class _ClienteModel(Model):
-    id_cliente = AutoField(column_name='id_cliente')
-    nombre = CharField(column_name='nombre')
-    apellido = CharField(column_name='apellido')
-    cedula = CharField(column_name='cedula')
-    telefono = CharField(column_name='telefono')
-    email = CharField(column_name='email')
-    fecha_registro = DateTimeField(column_name='fecha_registro', null=True)
 
-    class Meta:
-        table_name = 'Cliente'
+def _a_vo(doc) -> Optional[ClienteVO]:
+    if doc is None:
+        return None
 
-# Helper para convertir un registro peewe a VO
-def _a_vo(fila: _ClienteModel) -> ClienteVO:
     return ClienteVO(
-        id_cliente=fila.id_cliente,
-        nombre=fila.nombre,
-        apellido=fila.apellido,
-        cedula=fila.cedula,
-        telefono=fila.telefono,
-        email=fila.email,
-        fecha_registro=fila.fecha_registro,
+        id_cliente=doc.get("id_cliente"),
+        nombre=doc.get("nombre"),
+        apellido=doc.get("apellido"),
+        cedula=doc.get("cedula"),
+        telefono=doc.get("telefono"),
+        email=doc.get("email"),
+        fecha_registro=doc.get("fecha_registro")
     )
 
 
-# Usa Peewee porque Cliente tiene operaciones CRUD simples sobre una sola tabla
 class ClienteDAO:
-    @staticmethod
-    def obtener_por_id(conexion: ConexionSQLite3,
-                       id_cliente: int) -> Optional[ClienteVO]:
-        try:
-            with _ClienteModel.bind_ctx(conexion.db_peewee):
-                return _a_vo(_ClienteModel.get_by_id(id_cliente))
-        except DoesNotExist:
-            return None
 
     @staticmethod
-    def listar(conexion: ConexionSQLite3) -> List[ClienteVO]:
-        with _ClienteModel.bind_ctx(conexion.db_peewee):
-            return [_a_vo(f) for f in _ClienteModel.select()]
+    def obtener_por_id(id_cliente: int) -> Optional[ClienteVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Cliente")
+
+        doc = coleccion.find_one({
+            "id_cliente": id_cliente
+        })
+
+        return _a_vo(doc)
 
     @staticmethod
-    def buscar_por_cedula(conexion: ConexionSQLite3,
-                          cedula: str) -> Optional[ClienteVO]:
-        with _ClienteModel.bind_ctx(conexion.db_peewee):
-            fila = _ClienteModel.get_or_none(_ClienteModel.cedula == cedula)
-            return _a_vo(fila) if fila else None
+    def listar() -> List[ClienteVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Cliente")
+
+        documentos = coleccion.find()
+
+        return [_a_vo(doc) for doc in documentos]
 
     @staticmethod
-    def insertar(conexion: ConexionSQLite3,
-                 cliente: ClienteVO) -> int:
-        with _ClienteModel.bind_ctx(conexion.db_peewee):
-            registro = _ClienteModel.create(
-                nombre=cliente.nombre,
-                apellido=cliente.apellido,
-                cedula=cliente.cedula,
-                telefono=cliente.telefono,
-                email=cliente.email,
-                fecha_registro=datetime.now(),
-            )
-            return registro.id_cliente
+    def buscar_por_cedula(
+            cedula: str) -> Optional[ClienteVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Cliente")
+
+        doc = coleccion.find_one({
+            "cedula": cedula
+        })
+
+        return _a_vo(doc)
+
+    @staticmethod
+    def insertar(cliente: ClienteVO) -> int:
+
+        coleccion = ConexionMongoDB.get_collection("Cliente")
+
+        ultimo = coleccion.find_one(
+            sort=[("id_cliente", -1)]
+        )
+
+        nuevo_id = 1
+
+        if ultimo:
+            nuevo_id = ultimo["id_cliente"] + 1
+
+        coleccion.insert_one({
+            "id_cliente": nuevo_id,
+            "nombre": cliente.nombre,
+            "apellido": cliente.apellido,
+            "cedula": cliente.cedula,
+            "telefono": cliente.telefono,
+            "email": cliente.email,
+            "fecha_registro": datetime.now()
+        })
+
+        return nuevo_id

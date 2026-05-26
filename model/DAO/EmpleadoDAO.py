@@ -1,54 +1,80 @@
 from typing import Optional, List
 
-from peewee import Model, AutoField, CharField, DoesNotExist
-
-from db.gestor_conexiones import ConexionSQLite3
+from db.mongo import ConexionMongoDB
 from model.VO.EmpleadoVO import EmpleadoVO
 
 
-class _EmpleadoModel(Model):
-    id_empleado = AutoField(column_name='id_empleado')
-    nombre      = CharField(column_name='nombre')
-    apellido    = CharField(column_name='apellido')
-    rol         = CharField(column_name='rol')
-    email       = CharField(column_name='email')
+def _a_vo(doc) -> Optional[EmpleadoVO]:
 
-    class Meta:
-        table_name = 'Empleado'
+    if doc is None:
+        return None
 
-# Helper para convertir un registro de peewee a vo
-def _a_vo(fila: _EmpleadoModel) -> EmpleadoVO:
     return EmpleadoVO(
-        id_empleado=fila.id_empleado,
-        nombre=fila.nombre,
-        apellido=fila.apellido,
-        rol=fila.rol,
-        email=fila.email,
+        id_empleado=doc.get("id_empleado"),
+        nombre=doc.get("nombre"),
+        apellido=doc.get("apellido"),
+        rol=doc.get("rol"),
+        email=doc.get("email")
     )
 
-# Usa Peewee porque Empleado es tabla plana, sin joins ni relaciones complejas.
+
 class EmpleadoDAO:
 
     @staticmethod
-    def obtener_por_id(conexion: ConexionSQLite3,
-                       id_empleado: int) -> Optional[EmpleadoVO]:
-        try:
-            with _EmpleadoModel.bind_ctx(conexion.db_peewee):
-                return _a_vo(_EmpleadoModel.get_by_id(id_empleado))
-        except DoesNotExist:
-            return None
+    def obtener_por_id(
+            id_empleado: int) -> Optional[EmpleadoVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Empleado")
+
+        doc = coleccion.find_one({
+            "id_empleado": id_empleado
+        })
+
+        return _a_vo(doc)
 
     @staticmethod
-    def listar(conexion: ConexionSQLite3) -> List[EmpleadoVO]:
-        with _EmpleadoModel.bind_ctx(conexion.db_peewee):
-            return [_a_vo(f) for f in _EmpleadoModel.select()]
+    def listar() -> List[EmpleadoVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Empleado")
+
+        return [
+            _a_vo(doc)
+            for doc in coleccion.find()
+        ]
 
     @staticmethod
-    def listar_por_rol(conexion: ConexionSQLite3,
-                       rol: str) -> List[EmpleadoVO]:
-        with _EmpleadoModel.bind_ctx(conexion.db_peewee):
-            return [
-                _a_vo(f)
-                for f in _EmpleadoModel.select()
-                                       .where(_EmpleadoModel.rol == rol)
-            ]
+    def listar_por_rol(
+            rol: str) -> List[EmpleadoVO]:
+
+        coleccion = ConexionMongoDB.get_collection("Empleado")
+
+        return [
+            _a_vo(doc)
+            for doc in coleccion.find({
+                "rol": rol
+            })
+        ]
+    
+    @staticmethod
+    def insertar(empleado: EmpleadoVO) -> int:
+
+        collection = ConexionMongoDB.get_collection("Empleado")
+
+        ultimo = collection.find_one(
+            sort=[("id_empleado", -1)]
+        )
+
+        nuevo_id = 1
+
+        if ultimo:
+            nuevo_id = ultimo["id_empleado"] + 1
+
+        collection.insert_one({
+            "id_empleado": nuevo_id,
+            "nombre": empleado.nombre,
+            "apellido": empleado.apellido,
+            "rol": empleado.rol,
+            "email": empleado.email
+        })
+
+        return nuevo_id
