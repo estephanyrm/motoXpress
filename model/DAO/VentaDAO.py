@@ -10,7 +10,6 @@ from model.DAO.MotoDAO import MotoDAO
 from model.DAO.EmpleadoDAO import EmpleadoDAO
 from model.DAO.FinanciacionDAO import FinanciacionDAO
 
-
 class VentaDAO:
 
     @staticmethod
