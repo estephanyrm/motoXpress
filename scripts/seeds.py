@@ -20,6 +20,7 @@ from model.DAO.CategoriaDAO import CategoriaDAO
 from model.VO.ClienteVO import ClienteVO
 from model.VO.EmpleadoVO import EmpleadoVO
 from model.VO.MotoVO import MotoVO
+from model.VO.CategoriaVO import CategoriaVO
 
 
 print("Cargando datos de prueba...")
@@ -29,9 +30,15 @@ print("Cargando datos de prueba...")
 categorias = CategoriaDAO.listar_todas()
 
 if not categorias:
-    raise Exception(
-        "No existen categorías. Cree primero algunas categorías."
-    )
+    print("No existen categorías. Creando por defecto...")
+    for nombre in ["Deportiva", "Trail", "Scooter"]:
+        CategoriaDAO.insertar(
+            CategoriaVO(
+                id_categoria=0, 
+                nombre=nombre, 
+                descripcion=f"Motos de tipo {nombre}"
+            )
+        )
 
 # CLIENTES
 
