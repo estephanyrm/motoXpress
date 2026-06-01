@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 pymongo
 PyQt5
+=======
+pymongo
+PyQt5
+>>>>>>> 71a97a77399a92d2ee9905be3551ac7a9c38f741
 psycopg
