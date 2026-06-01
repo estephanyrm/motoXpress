@@ -1,0 +1,119 @@
+{
+  "undo": [
+    {
+      "venta_id": 11,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": 5,
+      "venta": {
+        "id_venta": 11,
+        "precio_final": 60000000.0,
+        "tipo_pago": "financiado",
+        "id_cliente": 1,
+        "id_moto": 3,
+        "id_empleado": 1
+      },
+      "financiacion": {
+        "id_financiacion": null,
+        "cuotas": 10,
+        "interes": 12.0,
+        "monto_cuota": 6720000.0,
+        "id_venta": 11
+      }
+    },
+    {
+      "venta_id": 12,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": 6,
+      "venta": {
+        "id_venta": 12,
+        "precio_final": 14500000.0,
+        "tipo_pago": "financiado",
+        "id_cliente": 11,
+        "id_moto": 32,
+        "id_empleado": 3
+      },
+      "financiacion": {
+        "id_financiacion": null,
+        "cuotas": 12,
+        "interes": 12.0,
+        "monto_cuota": 1353333.33,
+        "id_venta": 12
+      }
+    },
+    {
+      "venta_id": 13,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": 7,
+      "venta": {
+        "id_venta": 13,
+        "precio_final": 34000000.0,
+        "tipo_pago": "financiado",
+        "id_cliente": 11,
+        "id_moto": 22,
+        "id_empleado": 3
+      },
+      "financiacion": {
+        "id_financiacion": null,
+        "cuotas": 12,
+        "interes": 12.0,
+        "monto_cuota": 3173333.33,
+        "id_venta": 13
+      }
+    },
+    {
+      "venta_id": 14,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": null,
+      "venta": {
+        "id_venta": 14,
+        "precio_final": 92000000.0,
+        "tipo_pago": "tarjeta",
+        "id_cliente": 10,
+        "id_moto": 4,
+        "id_empleado": 2
+      },
+      "financiacion": null
+    },
+    {
+      "venta_id": 15,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": 8,
+      "venta": {
+        "id_venta": 15,
+        "precio_final": 55000000.0,
+        "tipo_pago": "financiado",
+        "id_cliente": 11,
+        "id_moto": 5,
+        "id_empleado": 2
+      },
+      "financiacion": {
+        "id_financiacion": null,
+        "cuotas": 12,
+        "interes": 15.0,
+        "monto_cuota": 5270833.33,
+        "id_venta": 15
+      }
+    },
+    {
+      "venta_id": 16,
+      "moto_estado_anterior": "disponible",
+      "financiacion_id": 9,
+      "venta": {
+        "id_venta": 16,
+        "precio_final": 109760000.00000001,
+        "tipo_pago": "financiado",
+        "id_cliente": 13,
+        "id_moto": 6,
+        "id_empleado": 3
+      },
+      "financiacion": {
+        "id_financiacion": null,
+        "cuotas": 12,
+        "interes": 12.0,
+        "monto_cuota": 10244266.67,
+        "id_venta": 16
+      }
+    }
+  ],
+  "redo": []
+}
