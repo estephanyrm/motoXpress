@@ -33,12 +33,10 @@ if not categorias:
     print("No existen categorías. Creando por defecto...")
     for nombre in ["Deportiva", "Trail", "Scooter"]:
         CategoriaDAO.insertar(
-            CategoriaVO(
-                id_categoria=0, 
-                nombre=nombre, 
-                descripcion=f"Motos de tipo {nombre}"
-            )
+            nombre=nombre, 
+            descripcion=f"Motos de tipo {nombre}"
         )
+    categorias = CategoriaDAO.listar_todas()
 
 # CLIENTES
 
