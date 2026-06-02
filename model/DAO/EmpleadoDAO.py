@@ -1,80 +1,55 @@
+# model/DAO/EmpleadoDAO.py
 from typing import Optional, List
 
-from db.mongo import ConexionMongoDB
+from db.postgres import ConexionPostgres
 from model.VO.EmpleadoVO import EmpleadoVO
 
 
-def _a_vo(doc) -> Optional[EmpleadoVO]:
-
-    if doc is None:
+def _a_vo(row) -> Optional[EmpleadoVO]:
+    if row is None:
         return None
-
     return EmpleadoVO(
-        id_empleado=doc.get("id_empleado"),
-        nombre=doc.get("nombre"),
-        apellido=doc.get("apellido"),
-        rol=doc.get("rol"),
-        email=doc.get("email")
+        id_empleado=row["id_empleado"],
+        nombre=row["nombre"],
+        apellido=row["apellido"],
+        rol=row["rol"],
+        email=row["email"]
     )
 
 
 class EmpleadoDAO:
 
     @staticmethod
-    def obtener_por_id(
-            id_empleado: int) -> Optional[EmpleadoVO]:
-
-        coleccion = ConexionMongoDB.get_collection("Empleado")
-
-        doc = coleccion.find_one({
-            "id_empleado": id_empleado
-        })
-
-        return _a_vo(doc)
+    def obtener_por_id(conn: ConexionPostgres, id_empleado: int) -> Optional[EmpleadoVO]:
+        row = conn.execute(
+            "SELECT * FROM Empleado WHERE id_empleado = %s",
+            (id_empleado,)
+        ).fetchone()
+        return _a_vo(row)
 
     @staticmethod
-    def listar() -> List[EmpleadoVO]:
-
-        coleccion = ConexionMongoDB.get_collection("Empleado")
-
-        return [
-            _a_vo(doc)
-            for doc in coleccion.find()
-        ]
+    def listar(conn: ConexionPostgres) -> List[EmpleadoVO]:
+        rows = conn.execute(
+            "SELECT * FROM Empleado ORDER BY id_empleado"
+        ).fetchall()
+        return [_a_vo(r) for r in rows]
 
     @staticmethod
-    def listar_por_rol(
-            rol: str) -> List[EmpleadoVO]:
+    def listar_por_rol(conn: ConexionPostgres, rol: str) -> List[EmpleadoVO]:
+        rows = conn.execute(
+            "SELECT * FROM Empleado WHERE rol = %s ORDER BY id_empleado",
+            (rol,)
+        ).fetchall()
+        return [_a_vo(r) for r in rows]
 
-        coleccion = ConexionMongoDB.get_collection("Empleado")
-
-        return [
-            _a_vo(doc)
-            for doc in coleccion.find({
-                "rol": rol
-            })
-        ]
-    
     @staticmethod
-    def insertar(empleado: EmpleadoVO) -> int:
-
-        collection = ConexionMongoDB.get_collection("Empleado")
-
-        ultimo = collection.find_one(
-            sort=[("id_empleado", -1)]
-        )
-
-        nuevo_id = 1
-
-        if ultimo:
-            nuevo_id = ultimo["id_empleado"] + 1
-
-        collection.insert_one({
-            "id_empleado": nuevo_id,
-            "nombre": empleado.nombre,
-            "apellido": empleado.apellido,
-            "rol": empleado.rol,
-            "email": empleado.email
-        })
-
-        return nuevo_id
+    def insertar(conn: ConexionPostgres, empleado: EmpleadoVO) -> int:
+        row = conn.execute(
+            """
+            INSERT INTO Empleado (nombre, apellido, rol, email)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id_empleado
+            """,
+            (empleado.nombre, empleado.apellido, empleado.rol, empleado.email)
+        ).fetchone()
+        return row["id_empleado"]

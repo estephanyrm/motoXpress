@@ -1,74 +1,55 @@
+# model/DAO/FinanciacionDAO.py
 from typing import Optional
 
-from db.mongo import ConexionMongoDB
+from db.postgres import ConexionPostgres
 from model.VO.FinanciacionVO import FinanciacionVO
 
 
-def _a_vo(doc) -> Optional[FinanciacionVO]:
-
-    if doc is None:
+def _a_vo(row) -> Optional[FinanciacionVO]:
+    if row is None:
         return None
-
     return FinanciacionVO(
-        id_financiacion=doc.get("id_financiacion"),
-        cuotas=doc.get("cuotas"),
-        interes=doc.get("interes"),
-        monto_cuota=doc.get("monto_cuota"),
-        id_venta=doc.get("id_venta")
+        id_financiacion=row["id_financiacion"],
+        cuotas=row["cuotas"],
+        interes=row["interes"],
+        monto_cuota=row["monto_cuota"],
+        id_venta=row["id_venta"]
     )
 
 
 class FinanciacionDAO:
 
     @staticmethod
-    def obtener_por_venta(
-            id_venta: int) -> Optional[FinanciacionVO]:
-
-        coleccion = ConexionMongoDB.get_collection(
-            "Financiacion"
-        )
-
-        doc = coleccion.find_one({
-            "id_venta": id_venta
-        })
-
-        return _a_vo(doc)
+    def obtener_por_venta(conn: ConexionPostgres, id_venta: int) -> Optional[FinanciacionVO]:
+        row = conn.execute(
+            "SELECT * FROM Financiacion WHERE id_venta = %s",
+            (id_venta,)
+        ).fetchone()
+        return _a_vo(row)
 
     @staticmethod
-    def insertar(
-            financiacion: FinanciacionVO) -> int:
+    def insertar(conn: ConexionPostgres, financiacion: FinanciacionVO) -> int:
+        # Necesitamos fecha_venta porque Financiacion referencia
+        # la clave compuesta (id_venta, fecha_venta) de la tabla Venta
+        fecha = conn.execute(
+            "SELECT fecha_venta FROM Venta WHERE id_venta = %s",
+            (financiacion.id_venta,)
+        ).fetchone()
 
-        coleccion = ConexionMongoDB.get_collection(
-            "Financiacion"
-        )
-
-        ultimo = coleccion.find_one(
-            sort=[("id_financiacion", -1)]
-        )
-
-        nuevo_id = 1
-
-        if ultimo:
-            nuevo_id = ultimo["id_financiacion"] + 1
-
-        coleccion.insert_one({
-            "id_financiacion": nuevo_id,
-            "cuotas": financiacion.cuotas,
-            "interes": financiacion.interes,
-            "monto_cuota": financiacion.monto_cuota,
-            "id_venta": financiacion.id_venta
-        })
-
-        return nuevo_id
+        row = conn.execute(
+            """
+            INSERT INTO Financiacion (cuotas, interes, monto_cuota, id_venta, fecha_venta)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id_financiacion
+            """,
+            (financiacion.cuotas, financiacion.interes, financiacion.monto_cuota,
+             financiacion.id_venta, fecha["fecha_venta"])
+        ).fetchone()
+        return row["id_financiacion"]
 
     @staticmethod
-    def eliminar(
-            id_financiacion: int) -> None:
-
-        coleccion = ConexionMongoDB.get_collection(
-            "Financiacion"
+    def eliminar(conn: ConexionPostgres, id_financiacion: int) -> None:
+        conn.execute(
+            "DELETE FROM Financiacion WHERE id_financiacion = %s",
+            (id_financiacion,)
         )
-
-        coleccion.delete_one({
-            "id_financiacion": id_financiacion
-        })
