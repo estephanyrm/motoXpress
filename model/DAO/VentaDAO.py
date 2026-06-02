@@ -117,3 +117,8 @@ class VentaDAO:
             "DELETE FROM Venta WHERE id_venta = %s",
             (id_venta,)
         )
+        
+        
+        
+        
+        

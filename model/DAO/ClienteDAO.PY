@@ -56,3 +56,7 @@ class ClienteDAO:
              cliente.telefono, cliente.email)
         ).fetchone()
         return row["id_cliente"]
+    
+    
+    
+    

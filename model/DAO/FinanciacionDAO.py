@@ -53,3 +53,7 @@ class FinanciacionDAO:
             "DELETE FROM Financiacion WHERE id_financiacion = %s",
             (id_financiacion,)
         )
+        
+        
+        
+        
