@@ -1,8 +1,7 @@
-# model/DAO/EmpleadoDAO.py
 from typing import Optional, List
 
-from db.postgres import ConexionPostgres
-from model.VO.EmpleadoVO import EmpleadoVO
+from postgres.db.postgres import ConexionPostgres
+from postgres.model.VO.EmpleadoVO import EmpleadoVO
 
 
 def _a_vo(row) -> Optional[EmpleadoVO]:

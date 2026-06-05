@@ -1,14 +1,11 @@
-# model/DAO/VentaDAO.py
 from typing import Optional, List
 
-from db.postgres import ConexionPostgres
-
-from model.VO.VentaVO import VentaVO
-
-from model.DAO.ClienteDAO import ClienteDAO
-from model.DAO.MotoDAO import MotoDAO          # sigue en Mongo, no cambia
-from model.DAO.EmpleadoDAO import EmpleadoDAO
-from model.DAO.FinanciacionDAO import FinanciacionDAO
+from postgres.db.postgres import ConexionPostgres
+from postgres.model.VO.VentaVO import VentaVO
+from postgres.model.DAO.ClienteDAO import ClienteDAO
+from postgres.model.DAO.EmpleadoDAO import EmpleadoDAO
+from postgres.model.DAO.FinanciacionDAO import FinanciacionDAO
+from mongo.model.DAO.MotoDAO import MotoDAO
 
 
 def _a_vo(row) -> VentaVO:
@@ -41,7 +38,6 @@ class VentaDAO:
                 lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conn, id_v)
             )
             ventas.append(venta)
-
         return ventas
 
     @staticmethod
@@ -67,7 +63,6 @@ class VentaDAO:
                 lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conn, id_v)
             )
             ventas.append(venta)
-
         return ventas
 
     @staticmethod
@@ -85,7 +80,6 @@ class VentaDAO:
         venta._moto_cache     = MotoDAO.obtener_por_id(row["id_moto"])
         venta._empleado_cache = EmpleadoDAO.obtener_por_id(conn, row["id_empleado"])
         venta.financiacion    = FinanciacionDAO.obtener_por_venta(conn, row["id_venta"])
-
         return venta
 
     @staticmethod
@@ -107,8 +101,7 @@ class VentaDAO:
             venta.financiacion.id_venta = nuevo_id
             FinanciacionDAO.insertar(conn, venta.financiacion)
 
-        MotoDAO.actualizar_estado(venta.id_moto, "vendida")  # sigue en Mongo
-
+        MotoDAO.actualizar_estado(venta.id_moto, "vendida")
         return nuevo_id
 
     @staticmethod

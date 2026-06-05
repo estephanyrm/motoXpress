@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from model.VO.VentaVO import VentaVO
-from model.VO.FinanciacionVO import FinanciacionVO
-from model.VO.MotoVO import MotoVO
-from model.VO.ClienteVO import ClienteVO
+from postgres.model.VO.VentaVO import VentaVO
+from postgres.model.VO.FinanciacionVO import FinanciacionVO
+from postgres.model.VO.ClienteVO import ClienteVO
+from mongo.model.VO.MotoVO import MotoVO
 
 from service.VentaService import VentaService
 from service.MotoService import MotoService
@@ -27,8 +27,7 @@ class MotoXpressController:
         self._categorias = categoria_service
 
     # Ventas
-    def registrar_venta(self, venta: VentaVO,
-                        financiacion: Optional[FinanciacionVO] = None) -> int:
+    def registrar_venta(self, venta: VentaVO, financiacion: Optional[FinanciacionVO] = None) -> int:
         return self._ventas.registrar(venta, financiacion)
 
     def deshacer_venta(self) -> bool:
@@ -56,8 +55,7 @@ class MotoXpressController:
     def detalle_moto(self, id_moto: int) -> Optional[MotoVO]:
         return self._motos.obtener_detalle(id_moto)
 
-    def registrar_moto(self, moto: MotoVO,
-                       ids_categorias: Optional[List[int]] = None) -> int:
+    def registrar_moto(self, moto: MotoVO, ids_categorias: Optional[List[int]] = None) -> int:
         return self._motos.registrar(moto, ids_categorias)
 
     # Clientes
@@ -80,8 +78,7 @@ class MotoXpressController:
             raise ValueError("El nombre de la categoría no puede estar vacío.")
         return self._categorias.crear(nombre.strip(), descripcion)
 
-    def actualizar_categoria(self, id_categoria: int,
-                             nombre: str, descripcion: str = None) -> None:
+    def actualizar_categoria(self, id_categoria: int, nombre: str, descripcion: str = None) -> None:
         if not nombre or not nombre.strip():
             raise ValueError("El nombre de la categoría no puede estar vacío.")
         self._categorias.actualizar(id_categoria, nombre.strip(), descripcion)

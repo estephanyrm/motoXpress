@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from model.DAO.CategoriaDAO import CategoriaDAO
-from model.VO.CategoriaVO import CategoriaVO
+from mongo.model.DAO.CategoriaDAO import CategoriaDAO
+from mongo.model.VO.CategoriaVO import CategoriaVO
 
 
 class CategoriaService:
@@ -15,12 +15,8 @@ class CategoriaService:
     def crear(self, nombre: str, descripcion: str = None) -> int:
         return CategoriaDAO.insertar(nombre, descripcion)
 
-    def actualizar(self,  id_categoria: int, nombre: str, descripcion: str = None ) -> None:
-        CategoriaDAO.actualizar(
-            id_categoria,
-            nombre,
-            descripcion
-        )
+    def actualizar(self, id_categoria: int, nombre: str, descripcion: str = None) -> None:
+        CategoriaDAO.actualizar(id_categoria, nombre, descripcion)
 
     def eliminar(self, id_categoria: int) -> None:
         CategoriaDAO.eliminar(id_categoria)

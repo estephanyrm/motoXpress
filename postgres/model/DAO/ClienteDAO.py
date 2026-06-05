@@ -1,8 +1,7 @@
-# model/DAO/ClienteDAO.py
 from typing import Optional, List
 
-from db.postgres import ConexionPostgres
-from model.VO.ClienteVO import ClienteVO
+from postgres.db.postgres import ConexionPostgres
+from postgres.model.VO.ClienteVO import ClienteVO
 
 
 def _a_vo(row) -> Optional[ClienteVO]:

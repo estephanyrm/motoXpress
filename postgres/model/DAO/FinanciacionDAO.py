@@ -1,8 +1,7 @@
-# model/DAO/FinanciacionDAO.py
 from typing import Optional
 
-from db.postgres import ConexionPostgres
-from model.VO.FinanciacionVO import FinanciacionVO
+from postgres.db.postgres import ConexionPostgres
+from postgres.model.VO.FinanciacionVO import FinanciacionVO
 
 
 def _a_vo(row) -> Optional[FinanciacionVO]:
@@ -29,8 +28,6 @@ class FinanciacionDAO:
 
     @staticmethod
     def insertar(conn: ConexionPostgres, financiacion: FinanciacionVO) -> int:
-        # Necesitamos fecha_venta porque Financiacion referencia
-        # la clave compuesta (id_venta, fecha_venta) de la tabla Venta
         fecha = conn.execute(
             "SELECT fecha_venta FROM Venta WHERE id_venta = %s",
             (financiacion.id_venta,)

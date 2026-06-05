@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional, List
 
-from model.VO.CategoriaVO import CategoriaVO
+from mongo.model.VO.CategoriaVO import CategoriaVO
 
 
 @dataclass
