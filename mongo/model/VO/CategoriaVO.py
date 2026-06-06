@@ -1,9 +1,6 @@
-from dataclasses import dataclass, field
-from typing import Optional
+import mongoengine
 
-
-@dataclass
-class CategoriaVO:
-    id_categoria: int
-    nombre: str = field(default=None)
-    descripcion: Optional[str] = field(default=None)
+class CategoriaVO(mongoengine.EmbeddedDocument):
+    id_categoria = mongoengine.IntField(required=True)
+    nombre       = mongoengine.StringField(required=True)
+    descripcion  = mongoengine.StringField()

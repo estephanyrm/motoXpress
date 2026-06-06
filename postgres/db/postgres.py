@@ -5,21 +5,8 @@ from psycopg.rows import dict_row, DictRow
 from types import TracebackType
 from typing import Any
 
-
+# Context manager para conexiones PostgreSQL
 class ConexionPostgres:
-    """
-    Context manager para conexiones PostgreSQL
-
-    Uso:
-        with.connection_factory() as conn:
-            conn.execute(sql, params)
-
-    Al salir del bloque:
-        - Sin error  → COMMIT
-        - Con error  → ROLLBACK
-        - Siempre    → CIERRA 
-    """
-
     def __init__(
         self,
         host: str,
@@ -34,10 +21,8 @@ class ConexionPostgres:
     def __enter__(self) -> "ConexionPostgres":
         self.connection = psycopg.connect(
             conninfo=self.connection_uri,
-            row_factory=dict_row  # type: ignore
+            row_factory=dict_row  
         )
-
-        # Si retorno self.connection en vez de self pylance llora jeje
         return self
     
     def __exit__(
@@ -60,7 +45,6 @@ class ConexionPostgres:
 
         return False
     
-    # Para que el type checker no se enloquezca
     def __getattr__(self, name) -> Any:
         if self.connection is None:
             raise AttributeError("Connection not initialized")

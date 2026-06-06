@@ -2,7 +2,7 @@ services:
   pg:
     container_name: 'postgres-motoxpress'
     image: postgres:latest
-    environment: 
+    environment:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=2007
       - POSTGRES_DB=motoxpress
@@ -10,8 +10,6 @@ services:
       - '5433:5432'
     volumes:
       - pg-data:/var/lib/postgresql
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-
+      - ./postgres/db/init.sql:/docker-entrypoint-initdb.d/init.sql
 volumes:
   pg-data:
-

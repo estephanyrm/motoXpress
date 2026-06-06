@@ -1,10 +1,9 @@
 from typing import List, Optional
-
 from mongo.model.DAO.MotoDAO import MotoDAO
 from mongo.model.DAO.CategoriaDAO import CategoriaDAO
 from mongo.model.VO.MotoVO import MotoVO
 
-_ESTADOS_VALIDOS = {'disponible', 'vendida', 'reservada'}
+_ESTADOS_VALIDOS = {"disponible", "vendida", "reservada"}
 
 
 class MotoService:
@@ -18,13 +17,15 @@ class MotoService:
     def registrar(self, moto: MotoVO, ids_categorias: Optional[List[int]] = None) -> int:
         if MotoDAO.buscar_por_vin(moto.vin) is not None:
             raise ValueError(f"Ya existe una moto con VIN '{moto.vin}'.")
-        categorias = []
+
+        from mongo.model.VO.CategoriaVO import CategoriaVO
+        categorias_emb = []
         if ids_categorias:
             for id_cat in ids_categorias:
-                categoria = CategoriaDAO.obtener_por_id(id_cat)
-                if categoria:
-                    categorias.append(categoria)
-        moto.categorias = categorias
+                cat_doc = CategoriaDAO.obtener_por_id(id_cat)
+                if cat_doc:
+                    categorias_emb.append(cat_doc.to_embedded())
+        moto.categorias = categorias_emb
         return MotoDAO.insertar(moto)
 
     def cambiar_estado(self, id_moto: int, nuevo_estado: str) -> None:

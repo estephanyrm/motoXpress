@@ -1,6 +1,9 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from mongo.db.mongo import conectar
+conectar()
+
 from random import randint, choice
 
 from postgres.db.postgres import ConexionPostgres

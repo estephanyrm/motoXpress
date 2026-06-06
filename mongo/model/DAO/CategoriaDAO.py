@@ -1,49 +1,37 @@
-from typing import Optional, List
-
-from mongo.db.mongo import ConexionMongoDB
+from typing import List, Optional
+from mongo.model.VO.CategoriaDocumento import CategoriaDocumento
 from mongo.model.VO.CategoriaVO import CategoriaVO
-
-
-def _a_vo(doc) -> Optional[CategoriaVO]:
-    if doc is None:
-        return None
-    return CategoriaVO(
-        id_categoria=doc.get("id_categoria"),
-        nombre=doc.get("nombre"),
-        descripcion=doc.get("descripcion")
-    )
-
 
 class CategoriaDAO:
 
     @staticmethod
-    def listar_todas() -> List[CategoriaVO]:
-        coleccion = ConexionMongoDB.get_collection("Categoria")
-        return [_a_vo(doc) for doc in coleccion.find()]
+    def listar_todas() -> List[CategoriaDocumento]:
+        # Eager carga todos los documentos de una vez
+        return list(CategoriaDocumento.objects.all())
 
     @staticmethod
-    def obtener_por_id(id_categoria: int) -> Optional[CategoriaVO]:
-        coleccion = ConexionMongoDB.get_collection("Categoria")
-        doc = coleccion.find_one({"id_categoria": id_categoria})
-        return _a_vo(doc)
+    def obtener_por_id(id_categoria: int) -> Optional[CategoriaDocumento]:
+        return CategoriaDocumento.objects(id_categoria=id_categoria).first()
 
     @staticmethod
     def insertar(nombre: str, descripcion: str = None) -> int:
-        coleccion = ConexionMongoDB.get_collection("Categoria")
-        ultimo = coleccion.find_one(sort=[("id_categoria", -1)])
-        nuevo_id = (ultimo["id_categoria"] + 1) if ultimo else 1
-        coleccion.insert_one({"id_categoria": nuevo_id, "nombre": nombre, "descripcion": descripcion})
+        ultimo = CategoriaDocumento.objects.order_by("-id_categoria").first()
+        nuevo_id = (ultimo.id_categoria + 1) if ultimo else 1
+        doc = CategoriaDocumento(
+            id_categoria=nuevo_id,
+            nombre=nombre,
+            descripcion=descripcion
+        )
+        doc.save()
         return nuevo_id
 
     @staticmethod
     def actualizar(id_categoria: int, nombre: str, descripcion: str = None) -> None:
-        coleccion = ConexionMongoDB.get_collection("Categoria")
-        coleccion.update_one(
-            {"id_categoria": id_categoria},
-            {"$set": {"nombre": nombre, "descripcion": descripcion}}
+        CategoriaDocumento.objects(id_categoria=id_categoria).update_one(
+            set__nombre=nombre,
+            set__descripcion=descripcion
         )
 
     @staticmethod
     def eliminar(id_categoria: int) -> None:
-        coleccion = ConexionMongoDB.get_collection("Categoria")
-        coleccion.delete_one({"id_categoria": id_categoria})
+        CategoriaDocumento.objects(id_categoria=id_categoria).delete()

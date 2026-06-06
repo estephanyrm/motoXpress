@@ -28,19 +28,19 @@ class FinanciacionDAO:
 
     @staticmethod
     def insertar(conn: ConexionPostgres, financiacion: FinanciacionVO) -> int:
-        fecha = conn.execute(
-            "SELECT fecha_venta FROM Venta WHERE id_venta = %s",
+        tipo_pago = conn.execute(
+            "SELECT tipo_pago FROM Venta WHERE id_venta = %s",
             (financiacion.id_venta,)
         ).fetchone()
 
         row = conn.execute(
             """
-            INSERT INTO Financiacion (cuotas, interes, monto_cuota, id_venta, fecha_venta)
+            INSERT INTO Financiacion (cuotas, interes, monto_cuota, id_venta, tipo_pago)
             VALUES (%s, %s, %s, %s, %s)
             RETURNING id_financiacion
             """,
             (financiacion.cuotas, financiacion.interes, financiacion.monto_cuota,
-             financiacion.id_venta, fecha["fecha_venta"])
+             financiacion.id_venta, tipo_pago["tipo_pago"])
         ).fetchone()
         return row["id_financiacion"]
 

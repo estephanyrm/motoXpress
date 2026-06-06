@@ -1,15 +1,17 @@
 import sys
 import os
 
-# Permite ejecutar desde cualquier directorio
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from mongo.db.mongo import conectar
+conectar()
 
 from model.COMMAND.UndoRedoManager import UndoRedoManager
 
-from service.VentaService    import VentaService
-from service.MotoService     import MotoService
-from service.ClienteService  import ClienteService
-from service.EmpleadoService import EmpleadoService
+from service.VentaService     import VentaService
+from service.MotoService      import MotoService
+from service.ClienteService   import ClienteService
+from service.EmpleadoService  import EmpleadoService
 from service.CategoriaService import CategoriaService
 
 from controller.MotoXpressController import MotoXpressController
@@ -36,7 +38,7 @@ def build_controller() -> MotoXpressController:
 
 def main():
     controller = build_controller()
-    launch_ui(controller) 
+    launch_ui(controller)
 
 
 if __name__ == "__main__":

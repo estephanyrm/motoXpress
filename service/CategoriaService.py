@@ -1,15 +1,14 @@
 from typing import List, Optional
-
 from mongo.model.DAO.CategoriaDAO import CategoriaDAO
-from mongo.model.VO.CategoriaVO import CategoriaVO
+from mongo.model.VO.CategoriaDocumento import CategoriaDocumento
 
 
 class CategoriaService:
 
-    def listar_todas(self) -> List[CategoriaVO]:
+    def listar_todas(self) -> List[CategoriaDocumento]:
         return CategoriaDAO.listar_todas()
 
-    def obtener_por_id(self, id_categoria: int) -> Optional[CategoriaVO]:
+    def obtener_por_id(self, id_categoria: int) -> Optional[CategoriaDocumento]:
         return CategoriaDAO.obtener_por_id(id_categoria)
 
     def crear(self, nombre: str, descripcion: str = None) -> int:

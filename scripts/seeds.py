@@ -1,6 +1,9 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from mongo.db.mongo import conectar
+conectar()
+
 from random import choice
 
 from postgres.db.postgres import ConexionPostgres
@@ -12,6 +15,7 @@ from postgres.model.VO.EmpleadoVO import EmpleadoVO
 from mongo.model.DAO.MotoDAO import MotoDAO
 from mongo.model.DAO.CategoriaDAO import CategoriaDAO
 from mongo.model.VO.MotoVO import MotoVO
+from mongo.model.VO.CategoriaVO import CategoriaVO
 
 _PG = ConexionPostgres(
     host="localhost", port="5433",
@@ -20,15 +24,15 @@ _PG = ConexionPostgres(
 
 print("Cargando datos de prueba...")
 
-# CATEGORIAS (Mongo — sin conexión PG)
+# CATEGORIAS (Mongo con mongoengine)
 categorias = CategoriaDAO.listar_todas()
 if not categorias:
-    print("Creando categorías por defecto...")
+    print("Creando categorías...")
     for nombre in ["Deportiva", "Trail", "Scooter"]:
         CategoriaDAO.insertar(nombre=nombre, descripcion=f"Motos de tipo {nombre}")
     categorias = CategoriaDAO.listar_todas()
 
-# CLIENTES (PostgreSQL)
+# CLIENTES (PostgreSQL con psycopg)
 clientes_data = [
     ("Juan","Pérez"),("Ana","Gómez"),("Carlos","Ruiz"),("Laura","Torres"),
     ("David","Martínez"),("Sofía","Castro"),("Miguel","Rojas"),("Valentina","López"),
@@ -45,7 +49,7 @@ with _PG as conn:
         ))
 print("Clientes creados")
 
-# EMPLEADOS (PostgreSQL)
+# EMPLEADOS (PostgreSQL con psycopg)
 empleados_data = [
     ("Juan","Pérez","Vendedor"),("Ana","Gómez","Gerente"),("Carlos","Ruiz","Vendedor"),
     ("Laura","Torres","Asesor"),("David","Martínez","Vendedor"),("Paula","Gil","Asesor"),
@@ -60,7 +64,7 @@ with _PG as conn:
         ))
 print("Empleados creados")
 
-# MOTOS (Mongo)
+# MOTOS (Mongo con mongoengine)
 motos_data = [
     ("Yamaha","MT-03"),("Yamaha","R15"),("Yamaha","FZ25"),("Honda","CB190R"),
     ("Honda","CB300F"),("Honda","XR190L"),("Suzuki","Gixxer 250"),("Suzuki","GSX-S150"),
@@ -70,13 +74,14 @@ motos_data = [
     ("TVS","Apache RTR 200"),("Royal Enfield","Hunter 350")
 ]
 for i, (marca, modelo) in enumerate(motos_data, start=1):
+    cat = choice(categorias)
     moto = MotoVO(
-        id_moto=0, vin=f"VIN{i:05}", marca=marca, modelo=modelo,
+        vin=f"VIN{i:05}", marca=marca, modelo=modelo,
         anio=2022+(i%3), precio=15000000+(i*1200000),
         color=choice(["Negro","Rojo","Azul","Blanco","Gris"]),
-        estado="disponible"
+        estado="disponible",
+        categorias=[cat.to_embedded()]
     )
-    moto.categorias = [choice(categorias)]
     MotoDAO.insertar(moto)
 print("Motos creadas")
 print("Base de datos poblada correctamente")
