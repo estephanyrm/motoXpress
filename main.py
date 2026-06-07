@@ -21,10 +21,10 @@ from ui.pyqt5_view import launch_ui
 def build_controller() -> MotoXpressController:
     undo_redo = UndoRedoManager()
 
-    venta_service     = VentaService(undo_redo)
-    moto_service      = MotoService()
-    cliente_service   = ClienteService()
-    empleado_service  = EmpleadoService()
+    venta_service = VentaService(undo_redo)
+    moto_service = MotoService()
+    cliente_service = ClienteService()
+    empleado_service = EmpleadoService()
     categoria_service = CategoriaService()
 
     return MotoXpressController(

@@ -35,3 +35,18 @@ class MotoService:
         if moto is None:
             raise ValueError(f"No existe ninguna moto con id {id_moto}.")
         MotoDAO.actualizar_estado(id_moto, nuevo_estado)
+
+    def actualizar_categorias(self, id_moto: int, ids_categorias: List[int]) -> None:
+        moto = MotoDAO.obtener_por_id(id_moto)
+        if moto is None:
+            raise ValueError(f"No existe ninguna moto con id {id_moto}.")
+        from mongo.model.VO.CategoriaVO import CategoriaVO
+        categorias_emb = []
+        for id_cat in ids_categorias:
+            cat_doc = CategoriaDAO.obtener_por_id(id_cat)
+            if cat_doc:
+                categorias_emb.append(cat_doc.to_embedded())
+        MotoDAO.actualizar_categorias(id_moto, categorias_emb)
+
+    def listar_todas(self) -> list:
+        return MotoDAO.listar_todas()

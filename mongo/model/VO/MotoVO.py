@@ -4,8 +4,8 @@ from mongo.model.VO.CategoriaVO import CategoriaVO
 class MotoVO(mongoengine.Document):
     meta = {"collection": "Moto"}
 
-    id_moto = mongoengine.IntField(required=True, unique=True)
-    vin = mongoengine.StringField(required=True, unique=True)
+    id_moto = mongoengine.IntField(required=True)
+    vin = mongoengine.StringField(required=True)
     marca = mongoengine.StringField(required=True)
     modelo = mongoengine.StringField(required=True)
     anio = mongoengine.IntField(required=True)

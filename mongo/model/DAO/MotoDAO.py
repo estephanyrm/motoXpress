@@ -29,3 +29,11 @@ class MotoDAO:
     @staticmethod
     def actualizar_estado(id_moto: int, nuevo_estado: str) -> None:
         MotoVO.objects(id_moto=id_moto).update_one(set__estado=nuevo_estado)
+
+    @staticmethod
+    def actualizar_categorias(id_moto: int, categorias_emb: list) -> None:
+        MotoVO.objects(id_moto=id_moto).update_one(set__categorias=categorias_emb)
+
+    @staticmethod
+    def listar_todas() -> list:
+        return list(MotoVO.objects.all())

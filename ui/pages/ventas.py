@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget,
     QTableWidgetItem, QHeaderView, QPushButton,
-    QLineEdit, QComboBox, QFrame, QSpinBox
+    QComboBox, QFrame
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -26,7 +26,7 @@ class VentasPage(QWidget):
         layout.setSpacing(20)
 
         layout.addWidget(make_label("Historial de Ventas", size=20, bold=True))
-        layout.addWidget(make_label("Filtra por cliente o rango de fechas", size=13, color=TEXT2))
+        layout.addWidget(make_label("Filtra por cliente o marca de moto", size=13, color=TEXT2))
 
         # ── Panel de filtros ──
         filter_card = QFrame()
@@ -56,20 +56,12 @@ class VentasPage(QWidget):
         row1.addWidget(make_divider(vertical=True))
         row1.addSpacing(4)
 
-        # Rango de fechas
-        row1.addWidget(make_label("Desde:", size=13, color=TEXT2))
-        self._fil_desde = QLineEdit()
-        self._fil_desde.setPlaceholderText("AAAA-MM-DD")
-        self._fil_desde.setFixedWidth(120)
-        self._fil_desde.setStyleSheet(STYLE_INPUT)
-        row1.addWidget(self._fil_desde)
-
-        row1.addWidget(make_label("Hasta:", size=13, color=TEXT2))
-        self._fil_hasta = QLineEdit()
-        self._fil_hasta.setPlaceholderText("AAAA-MM-DD")
-        self._fil_hasta.setFixedWidth(120)
-        self._fil_hasta.setStyleSheet(STYLE_INPUT)
-        row1.addWidget(self._fil_hasta)
+        # Filtro por marca
+        row1.addWidget(make_label("Marca:", size=13, color=TEXT2))
+        self._combo_marca = QComboBox()
+        self._combo_marca.setStyleSheet(STYLE_INPUT)
+        self._combo_marca.setFixedWidth(200)
+        row1.addWidget(self._combo_marca)
 
         row1.addStretch()
 
@@ -90,7 +82,7 @@ class VentasPage(QWidget):
         fl.addLayout(row1)
 
         self._hint = make_label(
-            "Consejo: Si seleccionas un cliente específico, el filtro de fechas se ignora.",
+            "Consejo: Si seleccionas un cliente específico, el filtro de marca se ignora.",
             size=11, color=TEXT3, italic=True
         )
         fl.addWidget(self._hint)
@@ -110,9 +102,11 @@ class VentasPage(QWidget):
         self._tbl.verticalHeader().setVisible(False)
         self._tbl.setFocusPolicy(Qt.NoFocus)
         self._tbl.setAlternatingRowColors(True)
+        self._tbl.setSortingEnabled(False)  # el orden lo controla la BD (DESC)
         layout.addWidget(self._tbl)
 
         self._load_clientes()
+        self._load_marcas()
         self._reset()
 
     def _load_clientes(self):
@@ -127,27 +121,34 @@ class VentasPage(QWidget):
         except Exception as e:
             show_error(self, str(e))
 
+    def _load_marcas(self):
+        self._combo_marca.clear()
+        self._combo_marca.addItem("Todas las marcas", None)
+        try:
+            motos = self._ctrl.todas_las_motos()
+            marcas_vistas = set()
+            for m in sorted(motos, key=lambda m: m.marca or ""):
+                if m.marca and m.marca not in marcas_vistas:
+                    marcas_vistas.add(m.marca)
+                    self._combo_marca.addItem(m.marca, m.marca)
+        except Exception as e:
+            show_error(self, str(e))
+
     def _reset(self):
         self._combo_cliente.setCurrentIndex(0)
-        from datetime import date
-        year = date.today().year
-        self._fil_desde.setText(f"{year - 1}-01-01")
-        self._fil_hasta.setText(f"{year}-12-31")
+        self._combo_marca.setCurrentIndex(0)
         self._filtrar()
 
     def _filtrar(self):
         id_cli = self._combo_cliente.currentData()
+        marca = self._combo_marca.currentData()
         try:
             if id_cli is not None:
                 ventas = self._ctrl.ventas_por_cliente(id_cli)
+            elif marca is not None:
+                ventas = self._ctrl.ventas_por_marca(marca)
             else:
-                desde = self._fil_desde.text().strip()
-                hasta = self._fil_hasta.text().strip()
-                # Validar formato básico
-                if not desde or not hasta:
-                    show_error(self, "Ingresa fechas en formato AAAA-MM-DD.")
-                    return
-                ventas = self._ctrl.ventas_por_periodo(desde, hasta)
+                ventas = self._ctrl.listar_todas_ventas()
             self._populate(ventas)
         except Exception as e:
             show_error(self, str(e))
@@ -210,3 +211,4 @@ class VentasPage(QWidget):
 
     def refresh(self):
         self._load_clientes()
+        self._load_marcas()

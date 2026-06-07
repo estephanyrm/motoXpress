@@ -434,11 +434,8 @@ class CategoriasPage(QWidget):
     def _guardar_asignacion(self):
         """
         Guarda la asignación de categorías a la moto seleccionada.
-        Calcula diferencia entre estado actual y el deseado para un update mínimo.
+        Actualiza las categorías embebidas directamente en MongoDB.
         """
-        from model.DAO.MotoCategoriaDAO import MotoCategoriaDAO
-        from db.gestor_conexiones import connection_factory
-
         id_moto = self._moto_combo.currentData()
         if id_moto is None:
             show_error(self, "Selecciona una moto antes de guardar.")
@@ -454,19 +451,8 @@ class CategoriasPage(QWidget):
                 show_error(self, "La moto seleccionada no existe.")
                 return
 
-            moto.cargar_categorias()
-            ids_actuales = {c.id_categoria for c in moto.categorias}
-            ids_nuevas   = {id_cat for cb, id_cat in self._cat_checks if cb.isChecked()}
-
-            agregar = ids_nuevas - ids_actuales
-            quitar  = ids_actuales - ids_nuevas
-
-            # Aplicar cambios en una sola transacción
-            with connection_factory() as conn:
-                for id_cat in agregar:
-                    MotoCategoriaDAO.asignar(conn, id_moto, id_cat)
-                for id_cat in quitar:
-                    MotoCategoriaDAO.remover(conn, id_moto, id_cat)
+            ids_nuevas = [id_cat for cb, id_cat in self._cat_checks if cb.isChecked()]
+            self._ctrl.actualizar_categorias_moto(id_moto, ids_nuevas)
 
             # Refrescar los checks para mostrar estado actualizado
             self._on_moto_selected()

@@ -429,7 +429,7 @@ class _MotoDialog(QDialog):
         return ok
 
     def _save(self):
-        from model.VO.MotoVO import MotoVO
+        from mongo.model.VO.MotoVO import MotoVO
         if not self._validate():
             return
 

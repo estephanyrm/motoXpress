@@ -334,8 +334,8 @@ class NuevaVentaPage(QWidget):
         return ok
 
     def _registrar(self):
-        from model.VO.VentaVO import VentaVO
-        from model.VO.FinanciacionVO import FinanciacionVO
+        from postgres.model.VO.VentaVO import VentaVO
+        from postgres.model.VO.FinanciacionVO import FinanciacionVO
 
         if not self._validate():
             return

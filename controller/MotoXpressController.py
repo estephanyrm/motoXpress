@@ -48,6 +48,12 @@ class MotoXpressController:
     def ventas_por_periodo(self, fecha_inicio: str, fecha_fin: str) -> List[VentaVO]:
         return self._ventas.listar_por_periodo(fecha_inicio, fecha_fin)
 
+    def ventas_por_marca(self, marca: str) -> List[VentaVO]:
+        return self._ventas.listar_por_marca(marca)
+
+    def listar_todas_ventas(self) -> List[VentaVO]:
+        return self._ventas.listar_todas()
+
     # Motos
     def motos_disponibles(self) -> List[MotoVO]:
         return self._motos.listar_disponibles()
@@ -85,3 +91,8 @@ class MotoXpressController:
 
     def eliminar_categoria(self, id_categoria: int) -> None:
         self._categorias.eliminar(id_categoria)
+    def actualizar_categorias_moto(self, id_moto: int, ids_categorias: List[int]) -> None:
+        self._motos.actualizar_categorias(id_moto, ids_categorias)
+
+    def todas_las_motos(self) -> list:
+        return self._motos.listar_todas()

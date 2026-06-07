@@ -94,7 +94,17 @@ class VentaService:
         with _PG as conn:
             return VentaDAO.listar_por_cliente(conn, id_cliente)
 
-    def listar_por_periodo(self, fecha_inicio: str, fecha_fin: str) -> List[VentaVO]:
+    def listar_por_marca(self, marca: str) -> List[VentaVO]:
+        with _PG as conn:
+            todas = VentaDAO.listar_todas(conn)
+        return [
+            v for v in todas
+            if v._moto_cache and v._moto_cache.marca == marca
+        ]
+
+    def listar_todas(self) -> List[VentaVO]:
+        with _PG as conn:
+            return VentaDAO.listar_todas(conn)
         if fecha_inicio > fecha_fin:
             raise ValueError("La fecha de inicio no puede ser posterior a la de fin.")
         with _PG as conn:

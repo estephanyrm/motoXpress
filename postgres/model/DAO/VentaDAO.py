@@ -83,14 +83,36 @@ class VentaDAO:
         return venta
 
     @staticmethod
+    def listar_todas(conn: ConexionPostgres) -> List[VentaVO]:
+        rows = conn.execute(
+            "SELECT * FROM Venta ORDER BY fecha_venta DESC"
+        ).fetchall()
+
+        ventas = []
+        for row in rows:
+            venta = _a_vo(row)
+            venta._moto_cache = MotoDAO.obtener_por_id(row["id_moto"])
+            id_v = row["id_venta"]
+            venta._financiacion_loader = (
+                lambda id_v=id_v: FinanciacionDAO.obtener_por_venta(conn, id_v)
+            )
+            ventas.append(venta)
+        return ventas
+
+    @staticmethod
     def insertar(conn: ConexionPostgres, venta: VentaVO) -> int:
+        from datetime import datetime, timezone, timedelta
+        # UTC-5 Colombia — evita que PostgreSQL (UTC) registre "mañana"
+        tz_colombia = timezone(timedelta(hours=-5))
+        fecha_hoy = datetime.now(tz_colombia).date()
+
         row = conn.execute(
             """
-            INSERT INTO Venta (precio_final, tipo_pago, id_moto, id_cliente, id_empleado)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO Venta (fecha_venta, precio_final, tipo_pago, id_moto, id_cliente, id_empleado)
+            VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id_venta
             """,
-            (venta.precio_final, venta.tipo_pago, venta.id_moto,
+            (fecha_hoy, venta.precio_final, venta.tipo_pago, venta.id_moto,
              venta.id_cliente, venta.id_empleado)
         ).fetchone()
 

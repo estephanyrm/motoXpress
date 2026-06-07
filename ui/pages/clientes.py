@@ -207,7 +207,7 @@ class _ClienteDialog(QDialog):
         return ok
 
     def _save(self):
-        from model.VO.ClienteVO import ClienteVO
+        from postgres.model.VO.ClienteVO import ClienteVO
         if not self._validate():
             return
         try:
